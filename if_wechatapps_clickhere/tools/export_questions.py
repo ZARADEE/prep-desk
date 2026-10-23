@@ -76,7 +76,7 @@ def write_package(index, rows):
         "const create = require('../../shared/practice-controller.js').create;\n"
         f"Page(create(require('./questions.js'), '{root}'));\n", encoding="utf-8"
     )
-    (target / "index.json").write_text('{"navigationBarTitleText":"刷题"}\n', encoding="utf-8")
+    (target / "index.json").write_text('{"navigationBarTitleText":"刷题","usingComponents":{"question-content":"/components/question-content/index"}}\n', encoding="utf-8")
     for extension in ("wxml", "wxss"):
         shutil.copyfile(ROOT / "tools" / ("practice-template." + extension), target / ("index." + extension))
     return {

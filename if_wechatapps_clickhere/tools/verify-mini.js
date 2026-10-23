@@ -67,8 +67,9 @@ assert.ok(fs.statSync(path.join(root, 'data/question-index.js')).size +
 catalog.parts.forEach(part => {
   assert.ok(part.bytes < 2 * 1024 * 1024, part.root + ' exceeds package limit');
   assert.strictEqual(require(path.join(root, part.root, 'questions.js')).length, part.count);
-  assert.strictEqual(fs.readFileSync(path.join(root, part.root, 'index.wxml'), 'utf8'),
-    fs.readFileSync(path.join(root, 'tools/practice-template.wxml'), 'utf8'));
+  const template = fs.readFileSync(path.join(root, 'tools/practice-template.wxml'), 'utf8');
+  const packageTemplate = fs.readFileSync(path.join(root, part.root, 'index.wxml'), 'utf8');
+  assert.ok(packageTemplate.includes('<question-content question-id="{{question.id}}"'), part.root + ' has no formula / original image renderer');
   assert.strictEqual(fs.readFileSync(path.join(root, part.root, 'index.wxss'), 'utf8'),
     fs.readFileSync(path.join(root, 'tools/practice-template.wxss'), 'utf8'));
 });

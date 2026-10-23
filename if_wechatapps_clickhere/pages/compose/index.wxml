@@ -14,4 +14,5 @@
     <view class="muted">{{paper.total}} 题</view>
     <button class="button" bindtap="startPaper">开始答题</button>
   </view>
+  <view class="card"><view class="card-title">限时模考 · 连接电脑</view><view class="muted">独立答题、草稿自动保存；到时服务器封卷。联网丢失时记录暂存本机，不延长考试、不接受过期补交。</view><picker wx:if="{{templates.length}}" range="{{templates}}" range-key="name" value="{{selected}}" bindchange="pickTemplate"><view class="picker">{{templates[selected].name}} ▼</view></picker><view class="row"><input class="minutes" type="number" value="{{examMinutes || 90}}" bindblur="editDuration"/><text>分钟</text></view><button class="button button-light" loading="{{building}}" bindtap="startTimed">按当前模板组卷预览</button><view wx:if="{{timedPaper}}" class="card"><b>{{timedPaperTitle}}</b><text> · {{timedPaper.questions.length}} 题</text><button class="button button-yellow" bindtap="confirmTimed">确认开始考试</button></view><view wx:for="{{exams}}" wx:key="id" class="row exam-row"><text>{{item.title}} · {{item.submitted_at ? item.pending_count + ' 题待自评' : '进行中'}}</text><button data-id="{{item.id}}" bindtap="openExam">{{item.submitted_at ? '查看 / 自评' : '继续考试'}}</button></view></view>
 </view>

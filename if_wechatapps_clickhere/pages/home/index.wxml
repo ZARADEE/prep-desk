@@ -1,6 +1,16 @@
 <view class="page">
   <view class="page-header"><text class="heading">刷题</text><text class="muted">{{wrongCount}} 道错题待复习</text></view>
-
+  <view class="save-status" bindtap="retrySave">{{saveStatus}}</view>
+  <view class="row"><button class="button button-light" bindtap="openTools">搜索 · 收藏 · 笔记</button><button class="button button-light" bindtap="openReviews">到期复习</button></view>
+  <view class="continue-card">
+    <text class="card-title">{{resumable ? resumeTitle : '先完成一个小目标'}}</text>
+    <view class="muted">{{resumable ? '上次进度 ' + resumeProgress : '沿用当前范围，来 5 题'}}</view>
+    <button wx:if="{{resumable}}" class="button button-yellow" bindtap="resume">继续练习 →</button>
+    <button wx:else class="button button-yellow" disabled="{{!available}}" bindtap="quickStart">开始 5 题 →</button>
+  </view>
+  <view class="row"><button class="button button-light" bindtap="toggleFilters">{{filtersOpen ? '收起筛选' : '选择科目与范围'}}</button><button wx:if="{{resumable}}" class="button button-light" bindtap="quickStart">另开 5 题</button></view>
+  <view wx:if="{{filtersOpen}}">
+  <view class="section-label">科目</view>
   <view class="section-label">题库</view>
   <view class="bank-list">
     <view wx:for="{{banks}}" wx:key="id" class="bank-row {{bankId === item.id ? 'selected' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-id="{{item.id}}" bindtap="selectBank">
@@ -25,10 +35,11 @@
   <picker wx:if="{{subs.length}}" range="{{subNames}}" value="{{subIndex}}" bindchange="pickSub">
     <view class="filter-row"><text>二级范围</text><text class="filter-value">{{sub || '全部'}}</text><text class="filter-arrow">›</text></view>
   </picker>
-  <view class="filter-row"><text>练习题数</text><input class="count-input" type="number" value="{{count}}" bindblur="editCount" /><text class="muted">题</text></view>
+    <view class="filter-row"><text>练习题数</text><input class="count-input" type="number" value="{{count}}" bindblur="editCount" /><text class="muted">题</text></view>
   <view class="available">当前范围 {{available}} 题，本次 {{actualCount}} 题</view>
   <button class="button start-button" disabled="{{!available}}" bindtap="start">开始练习</button>
-  <view wx:if="{{resumable}}" class="resume-row" hover-class="tap-pressed" hover-stay-time="90" bindtap="resume"><text>继续练习 · {{resumeTitle}}</text><text>{{resumeProgress}} ›</text></view>
+  <button class="button button-light" bindtap="openExams">模考试卷与待自评答卷</button>
+  </view>
 
   <view class="todo-section">
     <view class="section-label">待办</view>

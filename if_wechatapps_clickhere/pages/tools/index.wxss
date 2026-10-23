@@ -1,0 +1,1 @@
+.card{margin:16rpx 0}.input,textarea{box-sizing:border-box;width:100%;min-height:88rpx;margin:12rpx 0;padding:14rpx;border:2rpx solid #172332;background:#fff;font-size:28rpx}.sheet-filters{display:flex;flex-wrap:wrap;gap:8rpx}.sheet-filters button{flex:1;min-width:100rpx;min-height:44px;border:2rpx solid #172332;border-radius:0;font-size:22rpx}.card .button{min-height:44px}

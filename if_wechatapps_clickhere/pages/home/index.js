@@ -39,9 +39,10 @@ Page({
     majorNames: ['全部'], subNames: ['全部'], subtypeNames: ['全部'],
     majorIndex: 0, subIndex: 0, subtypeIndex: 0, available: 0,
     count: 10, actualCount: 0, wrongCount: 0, todos: [], newTodo: '',
-    resumable: false, resumeTitle: '', resumeProgress: ''
+    resumable: false, resumeTitle: '', resumeProgress: '', filtersOpen: false, saveStatus: ''
   },
-  onLoad() {
+  onLoad(options) {
+    if (options && options.connect) this.pendingLink = decodeURIComponent(options.connect);
     const saved = store.read().practiceFilters || {};
     this.setData({
       bankId: banks.some(bank => bank.id === saved.bankId) ? saved.bankId : this.data.bankId,
@@ -53,6 +54,9 @@ Page({
   },
   onShow() {
     if (focus.restorePage()) return;
+    if (this.stopStatus) this.stopStatus();
+    this.stopStatus = store.subscribe(value => this.setData({ saveStatus: value.label }));
+    this.setData({ saveStatus: store.status().label, connectionReady: store.syncEnabled() });
     const state = store.read();
     const active = state.practiceSession;
     this.setData({ wrongCount: Object.keys(state.wrong || {}).length,
@@ -61,6 +65,14 @@ Page({
       resumeTitle: active ? active.title : '',
       resumeProgress: active ? (active.index + 1) + ' / ' + active.items.length : '' });
   },
+  onHide() { if (this.stopStatus) this.stopStatus(); },
+  onUnload() { if (this.stopStatus) this.stopStatus(); },
+  retrySave() { store.retrySave(); },
+  toggleFilters() { this.setData({ filtersOpen: !this.data.filtersOpen }); },
+  quickStart() { this.start(5); },
+  openTools() { wx.navigateTo({ url: '/pages/tools/index' }); },
+  openReviews() { wx.navigateTo({ url: '/pages/review/index' }); },
+  openExams() { wx.navigateTo({ url: '/pages/exam/index' }); },
   refreshFilters() {
     const { bankId, mode } = this.data;
     const bankPool = index.filter(question => matches(question, bankId, mode, '', '', ''));
@@ -111,11 +123,11 @@ Page({
     this.setData({ count });
     this.refreshFilters();
   },
-  start() {
+  start(requestedCount) {
     const { bankId, mode, major, sub, subtype, actualCount } = this.data;
     const pool = index.filter(question => matches(question, bankId, mode, major, sub, subtype));
     const bank = banks.find(item => item.id === bankId);
-    const chosen = practice.shuffle(pool).slice(0, actualCount);
+    const chosen = practice.shuffle(pool).slice(0, typeof requestedCount === 'number' ? requestedCount : actualCount);
     if (!session.start(chosen, bank ? bank.subject : '刷题', 'home')) {
       wx.showToast({ title: '当前范围没有题目', icon: 'none' });
     }

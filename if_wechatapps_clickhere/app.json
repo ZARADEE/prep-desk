@@ -3,7 +3,12 @@
     "pages/home/index",
     "pages/compose/index",
     "pages/wrong/index",
-    "pages/timer/index"
+    "pages/timer/index",
+    "pages/tools/index",
+    "pages/review/index",
+    "pages/exam/index",
+    "pages/library/index",
+    "pages/sketch/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#172332",

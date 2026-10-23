@@ -42,6 +42,10 @@ import type { ConfidenceSummary } from "../types";
 import { ConfidencePicker, ConfidenceSummaryView, CONFIDENCE_LABELS } from "./ConfidencePicker";
 
 import { QuestionReflection, learningRequest } from "./LearningPanel";
+import { ResponsiveSheet } from '../mobile/MobilePrimitives';
+import { OPEN_PRACTICE, readLocal, writeLocal } from '../mobile/storage';
+import { RichText } from './RichText';
+import { QuestionImage } from './QuestionImage';
 import type { KnowledgeCard } from "./LearningPanel";
 import { QuestionExplanation } from "./QuestionExplanation";
 
@@ -69,6 +73,9 @@ function pickWrongBookVictoryLine(): string {
 }
 
 export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetFilter, setSheetFilter] = useState('all');
+  const [draftSaved, setDraftSaved] = useState(true);
   const [, setLearningRevision] = useState(0);
   const [marked, setMarked] = useState<string[]>([]);
   const [draftAnswers, setDraftAnswers] = useState<Record<string, string[]>>({});
@@ -93,6 +100,8 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
   const [continuousMode, setContinuousMode] = useState(false);
   const [continuousLoading, setContinuousLoading] = useState(false);
   const [error, setError] = useState("");
+  const [catalogReady, setCatalogReady] = useState(false);
+  const [pendingOpen, setPendingOpen] = useState<{ id?: string; quick?: boolean; questionIds?: string[] } | null>(null);
   const continuousModeRef = useRef(false);
   const continuousTimerRef = useRef<number | null>(null);
 
@@ -112,13 +121,15 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
     void getPracticeCatalog()
       .then((nextCatalog) => {
         setCatalog(nextCatalog);
-        const nextSubject = firstSubject(nextCatalog);
-        const nextMajor = firstMajor(nextSubject);
+        const saved = readLocal<{ subject?: string; major_tag?: string; sub_tag?: string }>('paper-helper.practice-filters', {});
+        const nextSubject = nextCatalog.subjects.find(item => item.value === saved.subject) ?? firstSubject(nextCatalog);
+        const nextMajor = nextSubject?.major_tags.find(item => item.value === saved.major_tag) ?? firstMajor(nextSubject);
         setSubject(nextSubject?.value ?? "");
         setMajorTag(nextMajor?.value ?? "");
-        setSubTag(nextMajor?.sub_tags[0]?.value ?? "");
+        setSubTag(nextMajor?.sub_tags.some(item => item.value === saved.sub_tag) ? (saved.sub_tag ?? "") : nextMajor?.sub_tags[0]?.value ?? "");
       })
-      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "题库目录加载失败。"));
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "题库目录加载失败。"))
+      .finally(() => setCatalogReady(true));
   }, []);
   useEffect(() => { void getConfidenceSummary().then(setConfidenceSummary).catch(() => {}); }, []);
   useEffect(() => {
@@ -137,6 +148,10 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
     () => selectedSubject?.major_tags.find((item) => item.value === majorTag),
     [majorTag, selectedSubject]
   );
+  useEffect(() => {
+    const next = { subject, major_tag: majorTag, sub_tag: subTag };
+    if (next.subject && !writeLocal('paper-helper.practice-filters', next)) setError('本机筛选偏好无法保存。');
+  }, [subject, majorTag, subTag]);
   const currentQuestion: PracticeQuestion | undefined = session?.questions[currentIndex];
   const resultQuestion = answerResult?.question;
   const isWrongBookSession = session?.mode === "wrong_book";
@@ -147,6 +162,39 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
   const isMultiple = currentQuestion?.answer_mode === "multiple";
 
   useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string; quick?: boolean; questionIds?: string[] }>).detail || {};
+      setPendingOpen(detail);
+    };
+    window.addEventListener(OPEN_PRACTICE, open);
+    return () => window.removeEventListener(OPEN_PRACTICE, open);
+  }, []);
+
+  useEffect(() => {
+    if (!pendingOpen || !draftReady || busy) return;
+    if (pendingOpen.quick && !catalog && !catalogReady) return;
+    const detail = pendingOpen;
+    setPendingOpen(null);
+    if (detail.id) {
+      void resume(detail.id);
+    } else if (detail.questionIds?.length) {
+      void launchPracticeSession({ subject, major_tag: '', sub_tag: '', count: detail.questionIds.length, question_ids: detail.questionIds });
+    } else if (detail.quick && catalog) {
+      const saved = readLocal<{ subject?: string; major_tag?: string; sub_tag?: string }>('paper-helper.practice-filters', {});
+      const chosenSubject = catalog.subjects.find(item => item.value === saved.subject) ?? firstSubject(catalog);
+      const chosenMajor = chosenSubject?.major_tags.find(item => item.value === saved.major_tag) ?? firstMajor(chosenSubject);
+      const chosenSub = chosenMajor?.sub_tags.find(item => item.value === saved.sub_tag);
+      const available = chosenSub?.count ?? chosenMajor?.count ?? chosenSubject?.count ?? 0;
+      if (chosenSubject && available) {
+        stopContinuousPractice();
+        void launchPracticeSession({ subject: chosenSubject.value, question_bank_id: chosenSubject.question_bank_id ?? undefined, major_tag: chosenMajor?.value ?? '', sub_tag: chosenSub?.value ?? '', count: Math.min(5, available), seed: Date.now() });
+      } else setError('当前题库还没有可练习题目。');
+    } else if (detail.quick) {
+      setError('题库目录加载失败，暂时无法开始练习。');
+    }
+  }, [pendingOpen, draftReady, busy, catalog, catalogReady, subject]);
+
+  useEffect(() => {
     if (!session || session.completed) return;
     const timer = window.setInterval(() => setElapsed(value => value + 1), 1000);
     return () => window.clearInterval(timer);
@@ -154,8 +202,8 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
 
   useEffect(() => {
     if (!draftReady || !session) return;
-    try { localStorage.setItem("paper-helper-practice-draft", JSON.stringify({ id: session.id, currentIndex, marked, draftAnswers, elapsed })); }
-    catch { setError("无法暂存草稿：本地存储空间不足或不可用。"); }
+    try { localStorage.setItem("paper-helper-practice-draft", JSON.stringify({ id: session.id, currentIndex, marked, draftAnswers, elapsed })); setDraftSaved(true); }
+    catch { setDraftSaved(false); setError("无法暂存草稿：本地存储空间不足或不可用。"); }
   }, [session?.id, currentIndex, marked, draftAnswers, elapsed, draftReady]);
 
   useEffect(() => {
@@ -210,6 +258,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
 
   function jump(index: number): void {
     if (!session || busy) return;
+    setSheetOpen(false);
     setCurrentIndex(index); restoreQuestion(session, index);
   }
 
@@ -267,6 +316,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
 
   async function beginPractice(requestedCount = count, quiet = false): Promise<boolean> {
     if (!subject) return false;
+    writeLocal('paper-helper.practice-filters', { subject, major_tag: majorTag, sub_tag: subTag });
     return launchPracticeSession({
       subject,
       question_bank_id: selectedSubject?.question_bank_id ?? undefined,
@@ -586,12 +636,13 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                 </div>
               </div>
             )}
-            <div className="answer-card">
+            <ResponsiveSheet open={sheetOpen && active} title="答题卡" onClose={() => setSheetOpen(false)}><div className="answer-card">
               <div className="toolbar-actions"><button type="button" onClick={() => window.open(`${API_BASE}/practice/sessions/${session.id}/pdf?variant=question`, "_blank", "noopener,noreferrer")}>导出练习 PDF</button><button type="button" disabled={!session.completed} onClick={() => window.open(`${API_BASE}/practice/sessions/${session.id}/pdf?variant=answer`, "_blank", "noopener,noreferrer")}>导出答案解析 PDF</button></div>
-              <strong>用时 {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} · 自动暂存</strong>
-              <div>{session.questions.map((q, index) => <button aria-label={`第 ${index + 1} 题`} type="button" disabled={busy} key={q.id} className={index === currentIndex ? "is-active" : ""} onClick={() => jump(index)}>{index + 1}{q.attempt ? " ✓" : ""}{marked.includes(q.id) ? " ★" : ""}</button>)}</div>
+              <strong>用时 {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} · {draftSaved ? '草稿已存本机' : '本机保存失败'}</strong>
+              <div className="mobile-sheet-filters">{[['all','全部'],['unanswered','未答'],['marked','标记']].map(([key,label]) => <button key={key} aria-pressed={sheetFilter === key} onClick={() => setSheetFilter(key)}>{label}</button>)}</div>
+              <div>{session.questions.map((q, index) => (sheetFilter === 'all' || sheetFilter === 'unanswered' && !q.attempt || sheetFilter === 'marked' && marked.includes(q.id)) && <button aria-label={`第 ${index + 1} 题${q.attempt ? '，已答' : '，未答'}${marked.includes(q.id) ? '，已标记' : ''}${index === currentIndex ? '，当前位置' : ''}`} type="button" disabled={busy} key={q.id} className={index === currentIndex ? "is-active" : ""} onClick={() => jump(index)}>{index + 1}{q.attempt ? " ✓" : " ○"}{marked.includes(q.id) ? " ★" : ""}</button>)}</div>
               {currentQuestion && <button type="button" onClick={() => setMarked(items => items.includes(currentQuestion.id) ? items.filter(id => id !== currentQuestion.id) : [...items, currentQuestion.id])}>{marked.includes(currentQuestion.id) ? "取消标记" : "标记此题"}</button>}
-            </div>
+            </div></ResponsiveSheet>
             {currentQuestion && (
               <div className="practice-question">
                 <div className="practice-question-head">
@@ -599,14 +650,14 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                   <div>
                     <span className="practice-mode">{isMultiple ? "多项选择题 / SELECT ALL" : "单项选择题 / SELECT ONE"}</span>
                     {currentQuestion.source_document_id && (currentQuestion.source_regions?.length || currentQuestion.source_page) ? (
-                      <img
+                      <QuestionImage
                         className="practice-question-image"
                         alt="原版题面"
-                        loading="lazy"
                         src={questionPreviewUrl(currentQuestion.id)}
+                        fallback={<RichText text={currentQuestion.stem_markdown} />}
                       />
                     ) : (
-                      <div className="question-text">{currentQuestion.stem_markdown}</div>
+                      <RichText text={currentQuestion.stem_markdown} />
                     )}
                   </div>
                 </div>
@@ -624,7 +675,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                         disabled={Boolean(answerResult) || busy}
                       >
                         <b>{option.key}</b>
-                        <span>{option.text || `选择 ${option.key}`}</span>
+                        <RichText text={option.text || `选择 ${option.key}`} />
                         {answerResult && isCorrect && <Check size={19} />}
                         {answerResult && isWrongChoice && <X size={19} />}
                       </button>
@@ -667,6 +718,12 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
           </section>
         )}
 
+        {active && session && currentQuestion && <nav className="mobile-answer-dock mobile-only" aria-label="答题操作">
+          <button type="button" onClick={() => setSheetOpen(true)}>答题卡<br /><small>{currentIndex + 1}/{session.total_count}</small></button>
+          <button type="button" disabled={busy || currentIndex === 0} onClick={() => jump(currentIndex - 1)}>上一题</button>
+          {!answerResult ? <button className="primary-action" disabled={busy || !selectedOptions.length} onClick={() => void submitAnswer()}>提交答案</button> : <button className="primary-action" disabled={busy} onClick={() => currentIndex < session.questions.length - 1 ? nextQuestion() : setSheetOpen(true)}>{currentIndex < session.questions.length - 1 ? '下一题' : session.completed ? '查看答题卡' : '还有未答题'}</button>}
+          {!answerResult && <button disabled={busy || currentIndex === session.questions.length - 1} onClick={nextQuestion}>跳过</button>}
+        </nav>}
         {session && session.wrong_question_ids.length > 0 && (
           <div className="practice-export-bar panel">
             <div>
@@ -738,11 +795,11 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                     </div>
                   </div>
                   {item.source_document_id && (item.source_regions?.length || item.source_page) ? (
-                    <img
+                    <QuestionImage
                       className="wrong-book-question-image"
                       alt="原版题面"
-                      loading="lazy"
                       src={questionPreviewUrl(item.id)}
+                      fallback={<div className="question-text">{item.stem_markdown}</div>}
                     />
                   ) : (
                     <div className="question-text">{item.stem_markdown}</div>

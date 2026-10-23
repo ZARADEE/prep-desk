@@ -2,6 +2,7 @@ import React, { Component, useEffect, type ErrorInfo, type ReactNode } from 'rea
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
+import './mobile/mobile.css';
 
 class FirstRenderBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };

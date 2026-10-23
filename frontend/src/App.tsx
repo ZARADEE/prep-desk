@@ -11,6 +11,9 @@ import type { PaperLink } from './timer/model';
 import { DesktopPetView } from "./components/DesktopPetView";
 import { PracticeWorkspace } from "./components/PracticeWorkspace";
 import { OPEN_REVIEW, ReviewReminder } from "./components/ReviewTask";
+import { OPEN_PRACTICE } from './mobile/storage';
+import { MobileHome } from './mobile/MobileHome';
+import { MobileRuntime } from './mobile/MobilePrimitives';
 import { TemplateView } from "./components/TemplateView";
 import { ViewErrorBoundary } from "./components/ViewErrorBoundary";
 import type { QuestionBank, TabId, Tag } from "./types";
@@ -47,8 +50,9 @@ function MainApp(): JSX.Element {
   useEffect(()=>{
     const open=()=>setActiveTab("practice");
     window.addEventListener(OPEN_REVIEW,open);
+    window.addEventListener(OPEN_PRACTICE,open);
     const stop=window.paperHelper?.onOpenReview(()=>window.dispatchEvent(new Event(OPEN_REVIEW)));
-    return()=>{window.removeEventListener(OPEN_REVIEW,open);stop?.();};
+    return()=>{window.removeEventListener(OPEN_REVIEW,open);window.removeEventListener(OPEN_PRACTICE,open);stop?.();};
   },[]);
 
   useEffect(() => {
@@ -73,6 +77,7 @@ function MainApp(): JSX.Element {
 
   return (
     <div className="app-shell">
+      <MobileRuntime />
       <ReviewReminder />
       <TimerDock home={activeTab==='home'}/>
       <aside className="left-rail">
@@ -121,9 +126,9 @@ function MainApp(): JSX.Element {
         <section className="workspace">
           <ViewErrorBoundary key={activeTab}>
           {activeTab === "home" && (
-            <HomeDashboard
+            <><MobileHome /><HomeDashboard
               questionBanks={questionBanks}
-            />
+            /></>
           )}
           {activeTab === "compose" && <ComposeView tags={tags} questionBanks={questionBanks} onChanged={refresh} timerPaper={timerPaper} />}
           {activeTab === "templates" && <TemplateView tags={tags} questionBanks={questionBanks} onChanged={refresh} />}

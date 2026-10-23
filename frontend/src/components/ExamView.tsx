@@ -4,6 +4,9 @@ import { examPreviewUrl, getConfidenceSummary, getExam, saveExamAnswer, selfGrad
 import type { ConfidenceSummary, ExamAnswer, ExamSession } from "../types";
 import { ConfidencePicker, ConfidenceSummaryView, CONFIDENCE_LABELS } from "./ConfidencePicker";
 import { RichText } from "./RichText";
+import { QuestionImage } from "./QuestionImage";
+import { ResponsiveSheet } from '../mobile/MobilePrimitives';
+import { readLocal, writeLocal } from '../mobile/storage';
 
 const emptyAnswer = (): ExamAnswer => ({ selected_options: [], text_answer: "", confidence_level: null, marked: false });
 const typeName: Record<string, string> = { choice: "选择题", fill: "填空题", solution: "解答题", short_answer: "简答题" };
@@ -14,9 +17,18 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
   onClose: () => void;
   onRestart: () => void;
 }): JSX.Element {
-  const [answers, setAnswers] = useState<Record<string, ExamAnswer>>(exam.answers);
+  const draftKey = `paper-helper.exam-draft.${exam.id}`;
+  const restored = useRef(readLocal<{ answers: Record<string, ExamAnswer>; pending: string[]; base: Record<string, ExamAnswer> }>(draftKey, { answers: {}, pending: [], base: {} }));
+  const [answers, setAnswers] = useState<Record<string, ExamAnswer>>(() => ({ ...exam.answers, ...(!exam.submitted_at ? restored.current.answers : {}) }));
   const answersRef = useRef(answers);
-  const dirty = useRef(new Set<string>());
+  const dirty = useRef(new Set<string>(restored.current.pending));
+  const base = useRef({ ...exam.answers, ...restored.current.base });
+  const [conflicts, setConflicts] = useState<string[]>([]);
+  const conflictRef = useRef<string[]>([]);
+  const [localSaved, setLocalSaved] = useState(true);
+  const [pendingCount, setPendingCount] = useState(dirty.current.size);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetFilter, setSheetFilter] = useState('all');
   const saveTimer = useRef<number | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const submitting = useRef(false);
@@ -38,7 +50,18 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
   }).length;
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
-  useEffect(() => { setAnswers(exam.answers); answersRef.current = exam.answers; }, [exam.id, exam.answers]);
+  useEffect(() => {
+    const next = { ...exam.answers };
+    const collided: string[] = [];
+    if (!exam.submitted_at) dirty.current.forEach(id => {
+      if (JSON.stringify(exam.answers[id] ?? emptyAnswer()) !== JSON.stringify(base.current[id] ?? emptyAnswer()) &&
+          JSON.stringify(exam.answers[id]) !== JSON.stringify(answersRef.current[id])) collided.push(id);
+      if (answersRef.current[id]) next[id] = answersRef.current[id];
+    });
+    else if (dirty.current.size) setError('试卷已经封卷，本机待发送草稿保留供核对，不会改写已封卷成绩。');
+    conflictRef.current = collided; setConflicts(collided);
+    setAnswers(next); answersRef.current = next;
+  }, [exam.id, exam.answers, exam.submitted_at]);
   useEffect(() => {
     if (!submitted) return;
     void getConfidenceSummary().then(setSummary).catch(() => {});
@@ -53,31 +76,58 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
   }, [remaining, submitted]);
   useEffect(() => () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); void flush().catch(() => {}); }, [exam.id]);
   useEffect(() => { setSelfScore(answers[question?.id]?.self_score ?? 0); }, [question?.id, exam.answers]);
+  useEffect(() => {
+    const retry = () => { if (!exam.submitted_at && Date.now() < Date.parse(exam.deadline_at)) void flush().catch(reason => setError(String(reason))); };
+    const leave = (event: BeforeUnloadEvent) => { if (dirty.current.size) { event.preventDefault(); event.returnValue = ''; } };
+    window.addEventListener('online', retry); window.addEventListener('beforeunload', leave); retry();
+    return () => { window.removeEventListener('online', retry); window.removeEventListener('beforeunload', leave); };
+  }, [exam.id, exam.submitted_at]);
+
+  function persist(): boolean {
+    if (exam.submitted_at) return true; // Keep the pre-seal local recovery copy intact.
+    const ids = [...dirty.current];
+    setPendingCount(ids.length);
+    const saved = writeLocal(draftKey, { answers: Object.fromEntries(ids.map(id => [id, answersRef.current[id]])), pending: ids, base: base.current, savedAt: Date.now() });
+    setLocalSaved(saved); return saved;
+  }
+
+  function resolveConflict(id: string, useLocal: boolean): void {
+    if (!useLocal) { answersRef.current = { ...answersRef.current, [id]: exam.answers[id] ?? emptyAnswer() }; dirty.current.delete(id); }
+    base.current[id] = exam.answers[id] ?? emptyAnswer();
+    conflictRef.current = conflictRef.current.filter(value => value !== id); setConflicts(conflictRef.current);
+    setAnswers({ ...answersRef.current }); persist();
+    if (!conflictRef.current.length) void flush().catch(reason => setError(String(reason)));
+  }
 
   function flush(): Promise<void> {
     if (saveTimer.current !== null) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
     const ids = [...dirty.current];
-    dirty.current.clear();
     if (!ids.length) return queue.current;
+    if (exam.submitted_at || Date.now() >= Date.parse(exam.deadline_at)) return Promise.reject(new Error('试卷已到截止时间，待发送草稿仅留本机，不再补交。'));
+    if (conflictRef.current.length) return Promise.reject(new Error('请先选择冲突草稿的保留版本。'));
     const snapshot = answersRef.current;
     setSaving(true);
     queue.current = queue.current.catch(() => {}).then(async () => {
       for (const id of ids) {
-        try { await saveExamAnswer(exam.id, id, snapshot[id]); }
-        catch (reason) { dirty.current.add(id); throw reason; }
+        if (!dirty.current.has(id)) continue;
+        await saveExamAnswer(exam.id, id, snapshot[id]);
+        base.current[id] = snapshot[id];
+        if (JSON.stringify(answersRef.current[id]) === JSON.stringify(snapshot[id])) dirty.current.delete(id);
+        persist();
       }
-    }).finally(() => setSaving(false));
+    }).finally(() => { persist(); setSaving(false); });
     return queue.current;
   }
 
   function update(patch: Partial<ExamAnswer>): void {
-    if (submitted || !question) return;
+    if (submitted || remaining === 0 || !question) return;
     const next = { ...(answersRef.current[question.id] ?? emptyAnswer()), ...patch };
     const all = { ...answersRef.current, [question.id]: next };
     answersRef.current = all;
     setAnswers(all);
     dirty.current.add(question.id);
-    setError("");
+    const saved = persist();
+    setError(saved ? '' : '本机保存失败，请保持页面打开并连接电脑，或复制草稿。');
     if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => { void flush().catch(reason => setError(reason instanceof Error ? reason.message : "暂存失败")); }, 600);
   }
@@ -89,7 +139,7 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
     setBusy(true);
     setError("");
     try {
-      await flush();
+      if (!automatic) await flush();
       onChange(await submitExam(exam.id));
     } catch (reason) {
       try {
@@ -103,7 +153,7 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
   async function close(): Promise<void> {
     if (!submitted) {
       try { await flush(); }
-      catch (reason) { setError(reason instanceof Error ? reason.message : "暂存失败，暂时无法离开。"); return; }
+      catch (reason) { setError(reason instanceof Error ? reason.message : '暂存失败'); if (!persist() || !window.confirm('草稿已存本机、尚未存电脑。退出后请在同一设备重新进入恢复，是否退出？')) return; }
     }
     onClose();
   }
@@ -126,6 +176,7 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
       <div className="exam-clock"><Clock3 size={20} /><strong>{submitted ? "已交卷" : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`}</strong><small>{submitted ? "可查看答案与自评" : "倒计时结束自动交卷"}</small></div>
     </header>
     {error && <div className="notice notice-danger" role="alert">{error}</div>}
+    {conflicts.length > 0 && <section className="notice notice-warning"><strong>另一设备也修改了这些草稿，请选择保留版本</strong>{conflicts.map(id => <div key={id}><b>第 {questions.findIndex(q => q.id === id) + 1} 题</b><p>本机：{answers[id]?.text_answer || answers[id]?.selected_options.join('、')}</p><p>电脑：{exam.answers[id]?.text_answer || exam.answers[id]?.selected_options.join('、') || '空白'}</p><button onClick={() => resolveConflict(id, true)}>保留本机</button><button onClick={() => resolveConflict(id, false)}>使用电脑版本</button></div>)}</section>}
     {submitted && exam.results && <section className="exam-results">
       <strong>当前得分 {exam.results.score} / {exam.results.graded_possible}</strong>
       <span>卷面总分 {exam.results.paper_possible} · {exam.results.pending_count ? `${exam.results.pending_count} 题待自评` : "评分已完成"}</span>
@@ -134,26 +185,27 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
       <ConfidenceSummaryView summary={summary} />
     </section>}
     <div className="exam-layout">
-      <aside className="exam-rail" aria-label="试卷题号">
+      <ResponsiveSheet open={sheetOpen} title="考试答题卡" onClose={() => setSheetOpen(false)}><aside className="exam-rail" aria-label="试卷题号">
         <strong>{answeredCount} / {questions.length} 已作答</strong>
+        <div className="mobile-sheet-filters">{[['all','全部'],['unanswered','未答'],['marked','标记'],['pending','待自评']].map(([key,label]) => <button key={key} aria-pressed={sheetFilter === key} onClick={() => setSheetFilter(key)}>{label}</button>)}</div>
         {exam.paper.sections.map(section => <div className="exam-rail-section" key={section.id}>
-          <span>{section.title}</span><div>{questions.map((q, i) => q.section_id === section.id && <button type="button" key={q.id}
+          <span>{section.title}</span><div>{questions.map((q, i) => q.section_id === section.id && (sheetFilter === 'all' || sheetFilter === 'marked' && answers[q.id]?.marked || sheetFilter === 'pending' && exam.results?.questions[q.id]?.status === 'pending' || sheetFilter === 'unanswered' && !(answers[q.id]?.selected_options.length || answers[q.id]?.text_answer.trim())) && <button type="button" key={q.id}
             className={`${i === index ? "is-active" : ""} ${answers[q.id] && (q.type === "choice" ? answers[q.id].selected_options.length : answers[q.id].text_answer.trim()) ? "is-answered" : ""}`}
             aria-label={`第 ${i + 1} 题${answers[q.id]?.marked ? "，已标记" : ""}`}
-            onClick={() => { if (!submitted) void flush().catch(reason => setError(String(reason))); setIndex(i); }}>
-            {i + 1}{answers[q.id]?.marked ? " *" : ""}</button>)}</div>
+            onClick={() => { if (!submitted) void flush().catch(reason => setError(String(reason))); setIndex(i); setSheetOpen(false); }}>
+            {i + 1}{answers[q.id]?.marked ? " ★" : ""}{answers[q.id]?.selected_options.length || answers[q.id]?.text_answer.trim() ? ' ✓' : ' ○'}</button>)}</div>
         </div>)}
-      </aside>
+      </aside></ResponsiveSheet>
       <section className="exam-question-panel">
         <div className="exam-question-top"><span className="question-index">{index + 1}</span><div><span className="eyebrow">{typeName[question.type] ?? question.type} · {question.allocated_score} 分</span><h2>{question.section_title ?? "试卷作答"}</h2></div>
           <button type="button" className="outline-action" disabled={submitted} onClick={() => update({ marked: !answer.marked })}><Flag size={16} />{answer.marked ? "取消标记" : "标记"}</button></div>
-        {question.frozen_question_preview ? <img className="exam-question-image" src={examPreviewUrl(exam.id, question.id)} alt="原版题面" /> : <RichText text={question.stem_markdown} />}
+        {question.frozen_question_preview ? <QuestionImage className="exam-question-image" src={examPreviewUrl(exam.id, question.id)} alt="原版题面" fallback={<RichText text={question.stem_markdown} />} /> : <RichText text={question.stem_markdown} />}
         {question.type === "choice" ? <div className="exam-options">{question.options.map(option => {
           const selected = answer.selected_options.includes(option.key);
           const correct = result?.correct_options.includes(option.key);
           return <button type="button" key={option.key} disabled={submitted} className={`${selected ? "is-selected" : ""} ${submitted && correct ? "is-correct" : ""} ${submitted && selected && !correct ? "is-wrong" : ""}`}
             onClick={() => update({ selected_options: multiple ? (selected ? answer.selected_options.filter(key => key !== option.key) : [...answer.selected_options, option.key].sort()) : [option.key] })}>
-            <b>{option.key}</b><span>{option.text}</span>{submitted && correct && <Check size={18} />}</button>;
+            <b>{option.key}</b><RichText text={option.text} />{submitted && correct && <Check size={18} />}</button>;
         })}</div> : <textarea className="exam-text-answer" value={answer.text_answer} disabled={submitted} onChange={event => update({ text_answer: event.target.value })} placeholder="在此输入作答过程；草稿会自动保存" />}
         {!submitted && <ConfidencePicker value={answer.confidence_level} onChange={value => update({ confidence_level: value })} />}
         {submitted && <div className="exam-review">
@@ -162,12 +214,13 @@ export function ExamView({ exam, onChange, onClose, onRestart }: {
           <div><b>参考答案</b><RichText text={question.answer_markdown || "暂无文字参考答案，请查看原版解析。"} /></div>
           {question.analysis_markdown && <div><b>解析</b><RichText text={question.analysis_markdown} /></div>}
           {question.scoring_points?.length > 0 && <div><b>评分点</b><ul>{question.scoring_points.map((point, i) => <li key={i}>{point.label} · {point.score} 分</li>)}</ul></div>}
-          {question.analysis_source_document_id && <img className="exam-question-image" src={examPreviewUrl(exam.id, question.id, "analysis")} alt="原版解析" />}
+          {question.analysis_source_document_id && <QuestionImage className="exam-question-image" src={examPreviewUrl(exam.id, question.id, "analysis")} alt="原版解析" fallback={<RichText text={question.analysis_markdown} />} />}
           {result?.status === "pending" || result?.status === "self_graded" ? <div className="exam-self-grade"><label>本题自评得分 <input type="number" min={0} max={question.allocated_score} step="0.5" value={selfScore} onChange={event => setSelfScore(Number(event.target.value))} /></label><button type="button" disabled={busy} onClick={() => void grade()}>保存自评</button></div> : null}
         </div>}
-        <footer className="exam-question-footer"><button type="button" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={16} />上一题</button><span>{saving ? "保存中…" : "自动暂存"}</span>{index < questions.length - 1 ? <button type="button" onClick={() => setIndex(index + 1)}>下一题<ArrowRight size={16} /></button> : null}</footer>
+        <footer className="exam-question-footer"><button type="button" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={16} />上一题</button><span role="status">{!localSaved ? '本机保存失败' : saving ? '已存本机 · 同步中' : pendingCount ? `已存本机 · 待同步 ${pendingCount} 题` : '已存电脑'}</span>{pendingCount > 0 && !submitted && <button onClick={() => void flush().catch(reason => setError(String(reason)))}>重试保存</button>}{index < questions.length - 1 ? <button type="button" onClick={() => setIndex(index + 1)}>下一题<ArrowRight size={16} /></button> : null}</footer>
       </section>
     </div>
     {!submitted && <div className="exam-submit-bar"><span>{questions.length - answeredCount} 道未作答</span><button type="button" className="primary-action" disabled={busy} onClick={() => void finish()}><Send size={17} />{busy ? "正在交卷…" : "交卷并查看结果"}</button></div>}
+    <nav className="mobile-answer-dock mobile-only" aria-label="考试操作"><button onClick={() => setSheetOpen(true)}>答题卡<br /><small>{index + 1}/{questions.length}</small></button><button disabled={index === 0} onClick={() => setIndex(index - 1)}>上一题</button>{index < questions.length - 1 ? <button className="primary-action" onClick={() => setIndex(index + 1)}>下一题</button> : !submitted ? <button className="primary-action" disabled={busy} onClick={() => void finish()}>交卷</button> : <button onClick={() => setSheetOpen(true)}>待自评</button>}</nav>
   </div>;
 }

@@ -22,13 +22,17 @@ async function call<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 type StateResponse = { ok: boolean; state: Record<string, { value: unknown; revision: number; updated_at: string }> };
+let baseValues: Record<string, unknown> = {};
 
 export async function pullSyncState(keys: string[] = SYNC_KEYS): Promise<Record<string, unknown>> {
   const query = encodeURIComponent(keys.join(","));
   const result = await call<StateResponse>(`/sync/state?device_id=${encodeURIComponent(deviceId())}&keys=${query}`);
-  return Object.fromEntries(Object.entries(result.state ?? {}).map(([key, item]) => [key, item.value]));
+  const values = Object.fromEntries(Object.entries(result.state ?? {}).map(([key, item]) => [key, item.value]));
+  baseValues = { ...baseValues, ...values };
+  return values;
 }
 
 export async function pushSyncState(changes: Record<string, unknown>): Promise<void> {
-  await call("/sync/state", { method: "POST", body: JSON.stringify({ device_id: deviceId(), changes }) });
+  const result = await call<StateResponse>("/sync/state", { method: "POST", body: JSON.stringify({ device_id: deviceId(), changes, base_values: baseValues }) });
+  baseValues = { ...baseValues, ...Object.fromEntries(Object.entries(result.state).map(([key, item]) => [key, item.value])) };
 }

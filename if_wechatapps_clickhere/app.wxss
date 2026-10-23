@@ -18,3 +18,8 @@ page { background:#f7f9f8; color:#172332; font-family:Arial,"Microsoft YaHei",sa
 .chip { display:inline-block; border:2rpx solid #172332; padding:9rpx 17rpx; margin:10rpx 9rpx 0 0; background:#fff; font-size:23rpx; }
 .chip.active { background:#ffd54f; font-weight:800; }
 .input { border:1rpx solid #9fadaa; background:#fff; padding:18rpx; margin:14rpx 0; font-size:27rpx; }
+.page { padding-bottom:calc(80rpx + env(safe-area-inset-bottom)); overflow-wrap:anywhere; }
+.button { min-height:44px; line-height:1.4; padding:12px 10px; }
+.continue-card { padding:28rpx; border:4rpx solid #172332; background:#fff0b9; margin-top:16rpx; }
+.save-status { min-height:44px; display:flex; align-items:center; font-size:24rpx; color:#425550; }
+.row > .button { flex:1; min-width:0; }

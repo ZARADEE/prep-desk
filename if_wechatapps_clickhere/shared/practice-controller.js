@@ -36,7 +36,8 @@ function create(questions, root) {
       title: '', origin: 'home', index: 0, total: 0, question: null,
       selected: [], draft: '', result: null, done: false,
       answeredCount: 0, correctCount: 0, wrongCount: 0,
-      sheet: [], sheetOpen: false, progressWidth: '0%', error: '', retryCount: 0
+      sheet: [], visibleSheet: [], sheetOpen: false, sheetFilter: 'all', marked: false,
+      saveStatus: '', keyboardHeight: 0, progressWidth: '0%', error: '', retryCount: 0
     },
 
     onLoad(options) {
@@ -46,12 +47,15 @@ function create(questions, root) {
         return;
       }
       this.sessionId = session.id;
+      this.stopStatus = store.subscribe(value => this.setData({ saveStatus: value.label }));
       if (session.finishedAt) { this.showSummary(session); return; }
       this.showQuestion();
     },
 
     onHide() { this.persistDraft(); },
-    onUnload() { this.persistDraft(); },
+    onUnload() { this.persistDraft(); if (this.stopStatus) this.stopStatus(); },
+    retrySave() { store.retrySave(); },
+    keyboardChanged(event) { this.setData({ keyboardHeight: event.detail.height || 0 }); },
 
     showQuestion() {
       const session = store.read().practiceSession;
@@ -80,19 +84,20 @@ function create(questions, root) {
         const answer = (session.answers || {})[entry.id];
         const answered = !!(answer && (!answer.subjective || answer.graded));
         return { number: position + 1, index: position, current: position === session.index,
-          answered, pending: !!answer && !answered, wrong: answered && !answer.correct };
+          marked: (session.marked || []).includes(entry.id), answered, pending: !!answer && !answered, wrong: answered && !answer.correct };
       });
       this.setData({
         title: session.title, origin: session.origin, index: session.index,
-        total: session.items.length, selected, result, done: false, sheet, error: '',
+        total: session.items.length, selected, result, done: false, sheet, error: '', marked: (session.marked || []).includes(raw.id),
         answeredCount: sheet.filter(entry => entry.answered).length,
-        progressWidth: Math.round((session.index + 1) * 100 / session.items.length) + '%',
+        progressWidth: Math.round(sheet.filter(entry => entry.answered).length * 100 / session.items.length) + '%',
         draft: (session.drafts || {})[raw.id + ':text'] || '',
         question: { id: raw.id, type: raw.type, stem: plain(raw.stem),
           chapter: raw.chapter || '', tags: (raw.tags || []).join(' / '),
           options: optionList, multiple: answerKeys(raw.answer).length > 1 }
       });
       this.currentDraft = (session.drafts || {})[raw.id + ':text'] || '';
+      this.filterSheet();
     },
 
     choose(event) {
@@ -147,7 +152,7 @@ function create(questions, root) {
       sessions.update({ answers });
       if (record) {
         const raw = byId[this.data.question.id];
-        store.setAnswer(Object.assign({}, raw, { root }), result.selected || [], result.correct);
+        store.setAnswer(Object.assign({}, raw, { root }), result.selected || [], result.correct, current.id + ':' + raw.id);
       }
       this.showQuestion();
     },
@@ -223,6 +228,19 @@ function create(questions, root) {
     },
 
     toggleSheet() { this.setData({ sheetOpen: !this.data.sheetOpen }); },
+    stopTap() {},
+    filterSheet(event) {
+      const filter = event ? event.currentTarget.dataset.filter : this.data.sheetFilter;
+      this.setData({ sheetFilter: filter, visibleSheet: this.data.sheet.filter(item => filter === 'all' ||
+        filter === 'unanswered' && !item.answered && !item.pending || filter === 'marked' && item.marked || filter === 'pending' && item.pending) });
+    },
+    toggleMark() {
+      const current = store.read().practiceSession;
+      const id = this.data.question.id;
+      const marked = current.marked || [];
+      sessions.update({ marked: marked.includes(id) ? marked.filter(item => item !== id) : marked.concat(id) });
+      this.showQuestion();
+    },
     openQuestion(event) {
       this.setData({ sheetOpen: false });
       this.jump(Number(event.currentTarget.dataset.index));

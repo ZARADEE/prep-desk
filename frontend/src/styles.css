@@ -779,6 +779,8 @@ h1, h2, p { margin: 0; }
 .wrong-book-item-actions { display: flex; align-items: center; gap: 6px; }
 .wrong-book-item-head b { background: var(--red); color: var(--ink); padding: 3px 5px; }
 .wrong-book-question-image { display: block; width: 100%; max-height: 360px; border: 2px solid var(--ink); background: #fff; object-fit: contain; object-position: top center; }
+.question-image-fallback { display: grid; gap: 10px; margin: 10px 0; border: 2px dashed var(--ink); background: #fff5ce; padding: 12px; line-height: 1.6; }
+.question-image-fallback button { min-height: 44px; justify-self: start; padding: 8px 12px; }
 .wrong-book-delete { display: inline-grid; place-items: center; width: 27px; height: 27px; padding: 0; background: var(--paper-strong); box-shadow: 2px 2px 0 var(--ink); }
 .wrong-book-delete:hover { background: var(--red); color: var(--ink); }
 

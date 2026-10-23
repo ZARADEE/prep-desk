@@ -32,6 +32,7 @@ SYNC_KEYS = {
     "practiceSession",
     "practiceFilters",
     "timer",
+    "notes", "mastery", "goals", "preferences", "sketches",
 }
 DEVICE_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
 
@@ -73,6 +74,39 @@ def _device(value: str) -> str:
 class SyncPush(BaseModel):
     device_id: str = Field(min_length=1, max_length=120)
     changes: dict[str, Any] = Field(default_factory=dict)
+    base_values: dict[str, Any] | None = None
+
+
+def merge_value(key: str, base: Any, incoming: Any, current: Any) -> Any:
+    """Three-way merge. Only changes relative to the client's saved base apply."""
+    if incoming == base:
+        return current
+    if current == base or incoming == current or current is None:
+        return incoming
+    if key == "todos" and isinstance(incoming, list) and isinstance(current, list):
+        def indexed(items):
+            if not isinstance(items, list): return {}
+            result = {}
+            for item in items:
+                if not isinstance(item, dict) or "id" not in item:
+                    raise HTTPException(422, "待办缺少稳定标识。")
+                result[str(item["id"])] = item
+            return result
+        merged = merge_value("notes", indexed(base), indexed(incoming), indexed(current))
+        return list(merged.values())
+    if key in {"notes", "mastery", "sketches", "target"} and isinstance(incoming, dict) and isinstance(current, dict):
+        before = base if isinstance(base, dict) else {}
+        result = dict(current)
+        missing = object()
+        for item in set(before) | set(incoming):
+            old, new, remote = before.get(item, missing), incoming.get(item, missing), current.get(item, missing)
+            if old == new: continue
+            if remote != old and remote != new:
+                raise HTTPException(409, {"message": "同一条记录已在另一设备修改，请选择保留版本。", "key": key, "item": item, "current": current})
+            if new is missing: result.pop(item, None)
+            else: result[item] = new
+        return result
+    raise HTTPException(409, {"message": "记录版本冲突，请选择保留版本。", "key": key, "current": current})
 
 
 class MiniAnswer(BaseModel):
@@ -136,6 +170,9 @@ def push_state(
         connection.execute("BEGIN IMMEDIATE")
         now = utc_now()
         for key, value in changes.items():
+            previous = connection.execute("SELECT value_json FROM sync_state WHERE state_key=?", (key,)).fetchone()
+            if payload.base_values is not None:
+                value = merge_value(key, payload.base_values.get(key), value, json.loads(previous[0]) if previous else None)
             serialized = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
             existing = connection.execute(
                 "SELECT revision FROM sync_state WHERE state_key=?", (key,)

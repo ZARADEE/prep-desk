@@ -1,0 +1,59 @@
+.mobile-only { display: none; }
+.mobile-dialog { position: fixed; inset: auto 0 0; width: min(700px, 100%); max-width: 100%; max-height: 90dvh; padding: 0; margin: auto auto 0; border: 3px solid var(--ink, #172332); background: var(--paper, #fff); color: var(--ink, #172332); }
+.mobile-dialog::backdrop { background: #17233299; }
+.mobile-dialog > header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 2px solid currentColor; }
+.mobile-dialog button { min-height: 44px; min-width: 44px; border: 2px solid currentColor; padding: 6px 10px; background: var(--paper, #fff); color: inherit; }
+.mobile-dialog-body { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; max-height: 75dvh; overscroll-behavior: contain; }
+.mobile-zoom-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mobile-image-scroll { overflow: auto; max-height: 60dvh; background: #fff; touch-action: pan-x pan-y pinch-zoom; }
+.mobile-image-scroll img { display: block; }
+.mobile-sheet-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.mobile-sheet-filters [aria-pressed="true"] { background: #ffd54f; color: #172332; }
+@media (max-width: 700px) {
+  .mobile-only { display: block; }
+  .mobile-home { margin-bottom: 16px; }
+  .mobile-home-heading { display: flex; justify-content: space-between; padding: 8px 0; }
+  .mobile-resume { padding: 16px; border: 3px solid var(--ink); background: #ffd54f; color: #172332; }
+  .mobile-resume strong { font-size: 20px; }
+  .mobile-resume p { margin: 8px 0 12px; }
+  .mobile-resume > button { width: 100%; }
+  .mobile-home .review-todo { margin: 10px 0; }
+  .app-shell { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) calc(66px + env(safe-area-inset-bottom)); height: 100dvh; }
+  .left-rail { grid-row: 2; height: calc(66px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+  .main-workspace,.workspace,.practice-main,.exam-question-panel { min-width: 0; }
+  .workspace { padding: 12px; padding-bottom: 110px; }
+  button,input,select,textarea { font-size: max(16px, 1em); }
+  button,.confidence-picker button,.exam-rail-section button { min-width: 44px; min-height: 44px; }
+  .top-strip { min-height: 55px; padding: 8px 12px; }
+  .top-strip .page-code,.backend-status small,.practice-header-mark { display: none; }
+  .top-title span { display: none; }
+  .backend-status { font-size: 11px; }
+  .practice-header { padding: 14px; }
+  .practice-header p,.practice-header .eyebrow { display: none; }
+  .practice-header h1 { font-size: 22px; margin: 0; }
+  .practice-stage-head { flex-wrap: wrap; padding: 12px; }
+  .practice-stage-actions { flex-wrap: wrap; }
+  .practice-option-grid,.exam-options { grid-template-columns: minmax(0,1fr); }
+  .practice-option,.exam-options button { overflow-wrap: anywhere; min-width: 0; }
+  .practice-question-head { grid-template-columns: minmax(0,1fr); }
+  .practice-question-image,.wrong-book-question-image,.exam-question-image,.study-preview img,.question-explanation img,[data-zoom] { cursor: zoom-in; }
+  .practice-question-head > .question-index { display: none; }
+  .study-rich-text,.question-text { overflow-wrap: anywhere; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+  .mobile-answer-dock { position: fixed; z-index: 35; left: 0; right: 0; bottom: calc(66px + env(safe-area-inset-bottom) + var(--keyboard-gap, 0px)); display: flex; gap: 6px; align-items: center; padding: 8px 10px; border-top: 3px solid var(--ink); background: var(--paper, #fff); }
+  .mobile-answer-dock button { flex: 1; padding: 8px 6px; font-size: 14px; border: 2px solid var(--ink); white-space: normal; }
+  .mobile-answer-dock .primary-action { flex: 1.5; }
+  .mobile-answer-dock small { font-size: 11px; }
+  .keyboard-open .mobile-answer-dock { bottom: var(--keyboard-gap, 0px); }
+  .keyboard-open .left-rail { visibility: hidden; }
+  .mobile-dialog .answer-card { margin: 0; padding: 0; border: 0; }
+  .mobile-dialog .exam-rail { display: block; }
+  .exam-header { flex-wrap: wrap; }
+  .exam-header h1 { overflow-wrap: anywhere; font-size: 20px; }
+  .exam-layout { display: block; }
+  .exam-question-footer,.exam-submit-bar { flex-wrap: wrap; }
+  .exam-question-image { max-width: 100%; height: auto; }
+  .practice-progress-track i { transition: width .15s linear; }
+  .mobile-dialog .is-active { outline: 3px solid currentColor; outline-offset: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .practice-progress-track i { transition: none; } }

@@ -1,0 +1,1 @@
+.preview{width:100%;height:auto;background:#fff}.text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:calc(30rpx * var(--reader-scale,1));line-height:var(--reader-line,1.7)}.status{font-size:24rpx;color:#526065;margin:12rpx 0}.status button{margin:8rpx;min-height:44px;border-radius:0;background:#fff;border:2rpx solid #172332}

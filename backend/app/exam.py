@@ -37,6 +37,7 @@ def init_tables(connection: Any) -> None:
 class StartExam(BaseModel):
     paper_id: str = Field(min_length=1, max_length=150)
     source_version: str | None = Field(default=None, max_length=100)
+    duration_minutes: int | None = Field(default=None, ge=1, le=1440)
 
 
 class SaveAnswer(BaseModel):
@@ -114,7 +115,7 @@ def _public(row: Any) -> dict[str, Any]:
 
 
 @router.post("")
-def start_exam(payload: StartExam) -> dict[str, Any]:
+def start_exam(payload: StartExam, allow_custom_duration: bool = False) -> dict[str, Any]:
     with db.connect() as connection:
         connection.execute("BEGIN IMMEDIATE")
         active = connection.execute("SELECT * FROM exam_sessions WHERE paper_id=? AND submitted_at IS NULL ORDER BY started_at DESC LIMIT 1", (payload.paper_id,)).fetchone()
@@ -130,7 +131,9 @@ def start_exam(payload: StartExam) -> dict[str, Any]:
             raise HTTPException(404, "试卷不存在。")
         paper, _issues = freeze(paper)
         now = datetime.now(timezone.utc)
-        deadline = now + timedelta(minutes=int(paper["template"]["duration_minutes"]))
+        if payload.duration_minutes is not None and not allow_custom_duration:
+            raise HTTPException(422, "此考试不允许修改试卷时限。")
+        deadline = now + timedelta(minutes=payload.duration_minutes or int(paper["template"]["duration_minutes"]))
         exam_id = f"exam-{uuid.uuid4().hex[:16]}"
         connection.execute("INSERT INTO exam_sessions(id,paper_id,snapshot_json,started_at,deadline_at) VALUES(?,?,?,?,?)",
                            (exam_id, payload.paper_id, json.dumps(paper, ensure_ascii=False), now.isoformat(), deadline.isoformat()))

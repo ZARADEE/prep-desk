@@ -1,0 +1,7 @@
+<view class="question-content">
+  <image wx:if="{{image}}" src="{{image}}" mode="widthFix" class="preview" bindtap="preview" binderror="failed" aria-label="题面图片，点按放大" />
+  <text wx:else user-select="true" class="text">{{text}}</text>
+  <view wx:if="{{loading}}" class="status">正在获取题面图片…</view>
+  <view wx:if="{{error}}" class="status">{{error}}<button size="mini" bindtap="retry">重试</button><button size="mini" bindtap="connect">连接 / 下载</button></view>
+  <view wx:if="{{image}}" class="status" bindtap="preview">点按图片放大 · 支持双指缩放</view>
+</view>

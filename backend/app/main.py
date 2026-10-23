@@ -74,6 +74,8 @@ from .exam import router as exam_router
 app.include_router(exam_router)
 from .sync import router as sync_router
 app.include_router(sync_router)
+from .mobile import router as mobile_router
+app.include_router(mobile_router)
 
 
 @app.exception_handler(RequestValidationError)
@@ -108,6 +110,13 @@ async def mobile_access_gate(request, call_next):
     token_bytes = access_token.encode("utf-8")
     authorized = bool(cookie_token) and hmac.compare_digest(cookie_token.encode("utf-8"), token_bytes)
     sync_token = os.getenv("PAPER_HELPER_SYNC_TOKEN", access_token)
+    # Native clients send the same per-run grant in a header, never in asset URLs.
+    supplied_header = request.headers.get("X-Paper-Helper-Mobile-Token", "")
+    if supplied_header and hmac.compare_digest(supplied_header.encode("utf-8"), token_bytes):
+        authorized = True
+    supplied_sync = request.headers.get("X-Paper-Helper-Sync-Token", "")
+    if sync_token and supplied_sync and hmac.compare_digest(supplied_sync.encode("utf-8"), sync_token.encode("utf-8")):
+        authorized = True
 
     if remote and request.method == "GET" and request.url.path == "/":
         supplied = request.query_params.get("access_token", "")
