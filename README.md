@@ -251,6 +251,7 @@ node if_wechatapps_clickhere/tools/verify-mini.js
 ## 文档与素材
 
 - [原生微信小程序功能与使用说明](if_wechatapps_clickhere/README.md)
+- [手机端 GitHub / Gitee 竞品对比与 23 项改进待办（2026-10-23）](docs/mobile-improvement-todo-2026-10-23.md)
 - [新一轮 GitHub 竞品功能对比（2026-10-15）](docs/github-competitor-comparison-2026-10-15.md)
 - [后续发展规划与阶段验收](docs/product-roadmap-2026-10-15.md)
 - [竞品对齐逐项验收表](docs/competitor-acceptance-2026-10-15.csv)

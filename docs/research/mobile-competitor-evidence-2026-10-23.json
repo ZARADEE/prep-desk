@@ -1,0 +1,654 @@
+{
+  "research_date": "2026-10-23",
+  "baseline_commit": "90b56e2eeb574ff154779aada2a9342a72f93bb5",
+  "first_batch_retrieved_at_utc": "2026-10-23T09:32:43.534745+00:00",
+  "methodology": "Official repository descriptions, pinned page source, selected official screenshots and official documentation. Competitor apps were not installed or tested live. A downloaded source file does not establish end-to-end functionality. Cached file timestamps approximate download completion, not publication time. Third-party source and screenshot binaries are not republished.",
+  "versions": {
+    "mindskip/xzs": {
+      "commit": "68571338efaea499e0aab6ae0895ba67316aebfb",
+      "committed_at": "2026-10-22T06:13:15Z",
+      "platform": "GitHub",
+      "url": "https://github.com/mindskip/xzs",
+      "mirror_url": "https://gitee.com/mindskip/xzs",
+      "mirror_head_matches": true
+    },
+    "kesixin/dati": {
+      "commit": "26ba1d09243f627b7af1f5328cc32f47249035c0",
+      "committed_at": "2026-10-22T07:24:18Z",
+      "platform": "GitHub",
+      "url": "https://github.com/kesixin/dati"
+    },
+    "lonelyhty/CS408-mini-program": {
+      "commit": "76c2cc138733bb03391acbd38e3f41e781b5f20d",
+      "committed_at": "2026-05-06T04:34:33Z",
+      "platform": "GitHub",
+      "url": "https://github.com/lonelyhty/CS408-mini-program"
+    },
+    "ankidroid/Anki-Android": {
+      "commit": "483c63cb090594db4fd43cc5fb3519e6841f6e0e",
+      "committed_at": "2026-10-23T07:05:50Z",
+      "platform": "GitHub",
+      "url": "https://github.com/ankidroid/Anki-Android"
+    },
+    "HabitRPG/habitica-android": {
+      "commit": "52fbfd7a1bc76b153fb55fba7220644798de54b2",
+      "committed_at": "2026-10-19T13:33:45Z",
+      "platform": "GitHub",
+      "url": "https://github.com/HabitRPG/habitica-android"
+    },
+    "shahriaarrr/Tomodoro": {
+      "commit": "17aa856547a2efb6cda0f3b9f3b27d9a4f112f78",
+      "committed_at": "2025-11-10T09:35:33Z",
+      "platform": "GitHub",
+      "url": "https://github.com/shahriaarrr/Tomodoro"
+    },
+    "hcwdc/castlestudy-uniapp": {
+      "commit": "9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c",
+      "platform": "Gitee",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp"
+    }
+  },
+  "sources": [
+    {
+      "id": "E01",
+      "url": "https://github.com/mindskip/xzs/blob/68571338efaea499e0aab6ae0895ba67316aebfb/README.md"
+    },
+    {
+      "id": "E02",
+      "url": "https://www.mindskip.net/style/git/images/wx/student/5.png"
+    },
+    {
+      "id": "E03",
+      "url": "https://github.com/kesixin/dati/blob/26ba1d09243f627b7af1f5328cc32f47249035c0/README.md"
+    },
+    {
+      "id": "E04",
+      "url": "https://mamba-blog-images.oss-cn-shanghai.aliyuncs.com/2025-01-09/802c77e0c66dc442e6d4a30ffc6ad361.jpg"
+    },
+    {
+      "id": "E05",
+      "url": "https://github.com/lonelyhty/CS408-mini-program/blob/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/dashboard/dashboard.wxml"
+    },
+    {
+      "id": "E06",
+      "url": "https://github.com/lonelyhty/CS408-mini-program/blob/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/practice/practice.wxml"
+    },
+    {
+      "id": "E07",
+      "url": "https://github.com/lonelyhty/CS408-mini-program/blob/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/checkin/checkin.wxml"
+    },
+    {
+      "id": "E08",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/blob/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/exam/answer.vue"
+    },
+    {
+      "id": "E09",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/blob/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/mine/collect.vue"
+    },
+    {
+      "id": "E10",
+      "url": "https://docs.ankidroid.org/"
+    },
+    {
+      "id": "E11",
+      "url": "https://github.com/ankidroid/Anki-Android/blob/483c63cb090594db4fd43cc5fb3519e6841f6e0e/docs/marketing/screenshots/en-US/phone/02-answer_zealand.png"
+    },
+    {
+      "id": "E12",
+      "url": "https://github.com/HabitRPG/habitica-android/blob/52fbfd7a1bc76b153fb55fba7220644798de54b2/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png"
+    },
+    {
+      "id": "E13",
+      "url": "https://github.com/HabitRPG/habitica-android/blob/52fbfd7a1bc76b153fb55fba7220644798de54b2/Habitica/src/main/java/com/habitrpg/android/habitica/interactors/LevelUpUseCase.kt"
+    },
+    {
+      "id": "E14",
+      "url": "https://github.com/shahriaarrr/Tomodoro/blob/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/README.md"
+    },
+    {
+      "id": "E15",
+      "url": "https://github.com/shahriaarrr/Tomodoro/blob/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/lib/widgets/duration_picker_sheet.dart"
+    },
+    {
+      "id": "E16",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API#service_worker_concepts_and_usage",
+      "verification": "Read using web browser tool; no local snapshot or content hash."
+    }
+  ],
+  "files": [
+    {
+      "repo": "mindskip/xzs",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/mindskip/xzs/68571338efaea499e0aab6ae0895ba67316aebfb/README.md",
+      "status": "downloaded",
+      "sha256": "c5befcbded00f1a92c369792c3023eaa0b285b26e35c711ca09e143710b35c7c",
+      "bytes": 6744,
+      "cached_at_utc": "2026-10-23T09:31:58.748517+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "mindskip/xzs",
+      "path": "source/wx/xzs-student/pages/index/index.wxml",
+      "url": "https://raw.githubusercontent.com/mindskip/xzs/68571338efaea499e0aab6ae0895ba67316aebfb/source/wx/xzs-student/pages/index/index.wxml",
+      "status": "downloaded",
+      "sha256": "f882fe71fc61b9ab8b6a7b333ddd9a26d2bf2680ed8c2c52c6c8c133508eb0a8",
+      "bytes": 2010,
+      "cached_at_utc": "2026-10-23T09:31:58.781776+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "mindskip/xzs",
+      "path": "source/wx/xzs-student/pages/exam/do/index.wxml",
+      "url": "https://raw.githubusercontent.com/mindskip/xzs/68571338efaea499e0aab6ae0895ba67316aebfb/source/wx/xzs-student/pages/exam/do/index.wxml",
+      "status": "downloaded",
+      "sha256": "e14438f3661897dde7226be508d518fdd18435bc6c02f4aee8fb109a0f1d6db0",
+      "bytes": 4787,
+      "cached_at_utc": "2026-10-23T09:31:58.748517+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "mindskip/xzs",
+      "path": "source/wx/xzs-student/pages/exam/do/index.js",
+      "url": "https://raw.githubusercontent.com/mindskip/xzs/68571338efaea499e0aab6ae0895ba67316aebfb/source/wx/xzs-student/pages/exam/do/index.js",
+      "status": "downloaded",
+      "sha256": "74d48469263d891d5c66ea1b01a9f84758d9ae2a891f55a17d3d8308770bde89",
+      "bytes": 2302,
+      "cached_at_utc": "2026-10-23T09:31:58.734994+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "mindskip/xzs",
+      "path": "source/wx/xzs-student/pages/record/index.wxml",
+      "url": "https://raw.githubusercontent.com/mindskip/xzs/68571338efaea499e0aab6ae0895ba67316aebfb/source/wx/xzs-student/pages/record/index.wxml",
+      "status": "downloaded",
+      "sha256": "27afd0df61417fed4ca77980758395b84cf4351a0e4631186c0e13e948903a4f",
+      "bytes": 655,
+      "cached_at_utc": "2026-10-23T09:31:59.418001+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/README.md",
+      "status": "downloaded",
+      "sha256": "84c6b3224671d066f6def230c687073d2826917c9e3d0dd8fdddd6bf885c7462",
+      "bytes": 3101,
+      "cached_at_utc": "2026-10-23T09:33:09.177269+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/index/index.wxml",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/index/index.wxml",
+      "status": "downloaded",
+      "sha256": "d81100f1149c8ae17162f7173454cf9983bae7a0bf206f3e5e6c0f262ca1a622",
+      "bytes": 3648,
+      "cached_at_utc": "2026-10-23T09:31:58.591920+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/questions/questions.wxml",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/questions/questions.wxml",
+      "status": "downloaded",
+      "sha256": "ff5db4093f0ce982a020cbbdaa71b79303c6819785277394090cd7f7e4c5febe",
+      "bytes": 77,
+      "cached_at_utc": "2026-10-23T09:31:59.022612+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/dati/index.wxml",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/dati/index.wxml",
+      "status": "downloaded",
+      "sha256": "9884baa5fa1692239afec9dac97362ebc54e022c4ad54d602bcebef2244884a3",
+      "bytes": 7318,
+      "cached_at_utc": "2026-10-23T09:31:59.778972+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/dati/index.js",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/dati/index.js",
+      "status": "downloaded",
+      "sha256": "7addd1d9cb23fc83294bfe28546332c13ab6c2599284445d4c1a4ba27f21876f",
+      "bytes": 842,
+      "cached_at_utc": "2026-10-23T09:31:59.983119+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/examResult/index.wxml",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/examResult/index.wxml",
+      "status": "downloaded",
+      "sha256": "adbd3d3fe6b54200e0a1e9c21aa27af717ef2219a1c5f47daf0c35d0f923088f",
+      "bytes": 2122,
+      "cached_at_utc": "2026-10-23T09:31:59.858092+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "kesixin/dati",
+      "path": "pages/errorStar/index.wxml",
+      "url": "https://raw.githubusercontent.com/kesixin/dati/26ba1d09243f627b7af1f5328cc32f47249035c0/pages/errorStar/index.wxml",
+      "status": "downloaded",
+      "sha256": "5b5567da7eff8ec024d9e6bfcb10c51004967033eb0926dacc06a107c615bf51",
+      "bytes": 2890,
+      "cached_at_utc": "2026-10-23T09:32:00.083799+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/README.md",
+      "status": "downloaded",
+      "sha256": "d8a2dd51c6c92bd4c582d8092405ddd38d156eed59b4a4be008c36bd652e753b",
+      "bytes": 1862,
+      "cached_at_utc": "2026-10-23T09:32:00.103111+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/dashboard/dashboard.wxml",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/dashboard/dashboard.wxml",
+      "status": "downloaded",
+      "sha256": "2dfd068071a32f1fdf15af8369fff323ee42ca9c59e9fefd635d28d8c1dc0037",
+      "bytes": 5499,
+      "cached_at_utc": "2026-10-23T09:32:00.113389+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/practice/practice.wxml",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/practice/practice.wxml",
+      "status": "downloaded",
+      "sha256": "96f837d3df5255cce3e195a2e9da8f3d712b284bf459d6aea4256c4970f8edd9",
+      "bytes": 5360,
+      "cached_at_utc": "2026-10-23T09:32:00.148969+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/practice/practice.js",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/practice/practice.js",
+      "status": "downloaded",
+      "sha256": "4997b7a2a9431ac3f3cc5ca7698a1a351801fd50e3694a297f771c4c6cc22ff5",
+      "bytes": 11352,
+      "cached_at_utc": "2026-10-23T09:32:01.172616+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/review/review.wxml",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/review/review.wxml",
+      "status": "downloaded",
+      "sha256": "8994c0b17704717c3e65e290eaaf8c6a3ec94ed6e20aed4d60675895d43a4256",
+      "bytes": 1536,
+      "cached_at_utc": "2026-10-23T09:32:01.011202+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/checkin/checkin.wxml",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/checkin/checkin.wxml",
+      "status": "downloaded",
+      "sha256": "b930c522f276a65e01e3cbc32871a01e7cae7fee974fc4e2ecfaff299848de77",
+      "bytes": 2970,
+      "cached_at_utc": "2026-10-23T09:32:01.202147+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "lonelyhty/CS408-mini-program",
+      "path": "pages/checkin/checkin.js",
+      "url": "https://raw.githubusercontent.com/lonelyhty/CS408-mini-program/76c2cc138733bb03391acbd38e3f41e781b5f20d/pages/checkin/checkin.js",
+      "status": "unavailable",
+      "reason": "curl: (28) Connection timed out after 40006 milliseconds"
+    },
+    {
+      "repo": "ankidroid/Anki-Android",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/ankidroid/Anki-Android/483c63cb090594db4fd43cc5fb3519e6841f6e0e/README.md",
+      "status": "downloaded",
+      "sha256": "c397343275eb95f159639b59ec2683dc93b88908748234842ed8236d2961ce53",
+      "bytes": 6296,
+      "cached_at_utc": "2026-10-23T09:32:01.451173+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "ankidroid/Anki-Android",
+      "path": "docs/marketing/screenshots/en-US/phone/01-question_sea.png",
+      "url": "https://raw.githubusercontent.com/ankidroid/Anki-Android/483c63cb090594db4fd43cc5fb3519e6841f6e0e/docs/marketing/screenshots/en-US/phone/01-question_sea.png",
+      "status": "unavailable",
+      "reason": "curl: (28) Connection timed out after 40007 milliseconds"
+    },
+    {
+      "repo": "ankidroid/Anki-Android",
+      "path": "docs/marketing/screenshots/en-US/phone/02-answer_zealand.png",
+      "url": "https://raw.githubusercontent.com/ankidroid/Anki-Android/483c63cb090594db4fd43cc5fb3519e6841f6e0e/docs/marketing/screenshots/en-US/phone/02-answer_zealand.png",
+      "status": "downloaded",
+      "sha256": "926d2ba78cc90a63d508a9d80fbc26f1f435508ea94e66a9b2e35a1aba725eee",
+      "bytes": 111106,
+      "cached_at_utc": "2026-10-23T09:32:02.351939+00:00",
+      "kind": "official_screenshot",
+      "visually_inspected": true
+    },
+    {
+      "repo": "ankidroid/Anki-Android",
+      "path": "docs/marketing/screenshots/en-US/phone/03-deck_list.png",
+      "url": "https://raw.githubusercontent.com/ankidroid/Anki-Android/483c63cb090594db4fd43cc5fb3519e6841f6e0e/docs/marketing/screenshots/en-US/phone/03-deck_list.png",
+      "status": "unavailable",
+      "reason": "curl: (28) Connection timed out after 40012 milliseconds"
+    },
+    {
+      "repo": "ankidroid/Anki-Android",
+      "path": "AnkiDroid/src/main/res/layout/fragment_reviewer.xml",
+      "url": "https://raw.githubusercontent.com/ankidroid/Anki-Android/483c63cb090594db4fd43cc5fb3519e6841f6e0e/AnkiDroid/src/main/res/layout/fragment_reviewer.xml",
+      "status": "downloaded",
+      "sha256": "f2d2c1b6dd1519df835649a616c6c142cd1833aa795049fbf1c6d93a437cc3fb",
+      "bytes": 9240,
+      "cached_at_utc": "2026-10-23T09:32:02.558760+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "HabitRPG/habitica-android",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/HabitRPG/habitica-android/52fbfd7a1bc76b153fb55fba7220644798de54b2/README.md",
+      "status": "downloaded",
+      "sha256": "3012b83755368bf55f5418ef5a2635c137b07b7535dfb0edf1a60da7c8342e89",
+      "bytes": 5031,
+      "cached_at_utc": "2026-10-23T09:32:02.136136+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "HabitRPG/habitica-android",
+      "path": "fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png",
+      "url": "https://raw.githubusercontent.com/HabitRPG/habitica-android/52fbfd7a1bc76b153fb55fba7220644798de54b2/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png",
+      "status": "downloaded",
+      "sha256": "5f93d70cef78cfeb5a6199230fc66c22689cc29ef01c14f1a16919955a6e30a9",
+      "bytes": 1755870,
+      "cached_at_utc": "2026-10-23T09:32:08.020959+00:00",
+      "kind": "official_screenshot",
+      "visually_inspected": true
+    },
+    {
+      "repo": "HabitRPG/habitica-android",
+      "path": "fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png",
+      "url": "https://raw.githubusercontent.com/HabitRPG/habitica-android/52fbfd7a1bc76b153fb55fba7220644798de54b2/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png",
+      "status": "downloaded",
+      "sha256": "33db3c9241d0d645880db0b5e872256be12df8388b89e968b138dbe6bb2fe5fa",
+      "bytes": 1413983,
+      "cached_at_utc": "2026-10-23T09:32:14.963987+00:00",
+      "kind": "official_screenshot",
+      "visually_inspected": true
+    },
+    {
+      "repo": "HabitRPG/habitica-android",
+      "path": "Habitica/src/main/java/com/habitrpg/android/habitica/interactors/LevelUpUseCase.kt",
+      "url": "https://raw.githubusercontent.com/HabitRPG/habitica-android/52fbfd7a1bc76b153fb55fba7220644798de54b2/Habitica/src/main/java/com/habitrpg/android/habitica/interactors/LevelUpUseCase.kt",
+      "status": "downloaded",
+      "sha256": "ca01b6eae7a2f08f3f3e12ae0dc4b769be7ce5af3bbe06d608814b79de4c8cae",
+      "bytes": 5696,
+      "cached_at_utc": "2026-10-23T09:32:03.243116+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/README.md",
+      "status": "downloaded",
+      "sha256": "af47b2b401dee89a0a8e6e4ba66b4bde258130e16d38d737f4e6e123ffdfa718",
+      "bytes": 5125,
+      "cached_at_utc": "2026-10-23T09:32:03.477387+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "fastlane/metadata/android/en-US/images/phoneScreenshots/1.png",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png",
+      "status": "downloaded",
+      "sha256": "949d3955661df4744768135082c2e1af6d6f368497f29190d5b598f6dfd8c6ce",
+      "bytes": 56137,
+      "cached_at_utc": "2026-10-23T09:32:04.555149+00:00",
+      "kind": "official_screenshot",
+      "visually_inspected": true
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "fastlane/metadata/android/en-US/images/phoneScreenshots/2.png",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png",
+      "status": "unavailable",
+      "reason": "curl: (28) Connection timed out after 40008 milliseconds"
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "lib/pages/home.dart",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/lib/pages/home.dart",
+      "status": "downloaded",
+      "sha256": "b494d874eaa3fab439d797da50c821be233d5c2fae22b7954ea9d879d7b2f62e",
+      "bytes": 6838,
+      "cached_at_utc": "2026-10-23T09:32:05.593579+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "lib/widgets/task_tile.dart",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/lib/widgets/task_tile.dart",
+      "status": "downloaded",
+      "sha256": "9d3e631ccc1759ec82815e01cc2a06c382c623d91c8a1290561c832a10f099ab",
+      "bytes": 2631,
+      "cached_at_utc": "2026-10-23T09:32:06.388543+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "shahriaarrr/Tomodoro",
+      "path": "lib/widgets/duration_picker_sheet.dart",
+      "url": "https://raw.githubusercontent.com/shahriaarrr/Tomodoro/17aa856547a2efb6cda0f3b9f3b27d9a4f112f78/lib/widgets/duration_picker_sheet.dart",
+      "status": "downloaded",
+      "sha256": "5e6464f61849997d7484724024d14ae6e7747f9d654f04fe5be32d0c0b94ded3",
+      "bytes": 7836,
+      "cached_at_utc": "2026-10-23T09:32:08.659270+00:00",
+      "kind": "repository_source"
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "README.md",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/README.md",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "ef8e48361fd5c5211a0d924cfe645067110b61a5dccf36f58e7994177a7a7021",
+      "bytes": 3037,
+      "cached_at_utc": "2026-10-23T09:33:44.516951+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages.json",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages.json",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "3b750bebe96aa54f558fc8c69325669d2882858bd6ebcc51a2713abfd0da2c10",
+      "bytes": 5617,
+      "cached_at_utc": "2026-10-23T09:33:44.508872+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/index/index.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/index/index.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "407ebb69c4110aa391f45143cae5bbbdf7dfa0c232d01746f531179b6b7acfa7",
+      "bytes": 6391,
+      "cached_at_utc": "2026-10-23T09:33:44.521055+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/exam/answer.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/exam/answer.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "f39e3059f0c3c283aabe0634a89f9bcbfc52373e18a7508999b41fa339dbe387",
+      "bytes": 7397,
+      "cached_at_utc": "2026-10-23T09:33:44.720841+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/exam/components/answer-card.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/exam/components/answer-card.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "cf1ae066782d0447e39ac4947dd84b49e372fe2556f2731e9e56af6e077963a9",
+      "bytes": 4060,
+      "cached_at_utc": "2026-10-23T09:33:44.532755+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/exam/components/image-question.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/exam/components/image-question.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "cached_at_utc": "2026-10-23T09:33:44.855967+00:00",
+      "note": "Empty source file; not used as evidence of image rendering."
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/exam/result.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/exam/result.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "2647596711437b7b7b50cdc8a37861c394465b25eb4bcc05628a52fd0f8302e2",
+      "bytes": 5515,
+      "cached_at_utc": "2026-10-23T09:33:44.953237+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/learn/details.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/learn/details.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "2f9435fc6f077f7376965358be2f07f99502bf97e5462a0200cec1dbd976c02f",
+      "bytes": 8412,
+      "cached_at_utc": "2026-10-23T09:33:45.139141+00:00",
+      "note": null
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "path": "pages/mine/collect.vue",
+      "url": "https://gitee.com/hcwdc/castlestudy-uniapp/raw/9ef0fdee91e0ef777b7d9e36ebef6d3febc2809c/pages/mine/collect.vue",
+      "kind": "repository_source",
+      "status": "downloaded",
+      "sha256": "81a7aa4ecb8c3c0373dd7643219de94f7736b6b544c0874060caaddef40f0295",
+      "bytes": 1643,
+      "cached_at_utc": "2026-10-23T09:33:45.106863+00:00",
+      "note": null
+    },
+    {
+      "repo": "mindskip/xzs",
+      "url": "https://www.mindskip.net/style/git/images/wx/student/1.png",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "97ca1466f14979ace03127a945979e20c3def5d7e1bc2951a44f42878da2cc60",
+      "bytes": 115642,
+      "cached_at_utc": "2026-10-23T09:33:44.657942+00:00",
+      "note": "Login screenshot; not homepage.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "mindskip/xzs",
+      "url": "https://www.mindskip.net/style/git/images/wx/student/2.png",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "25ac97ee3b93423fa1f1c10eb6f22a32b06a584e919b34201632e89cb4acbae1",
+      "bytes": 313525,
+      "cached_at_utc": "2026-10-23T09:33:44.809383+00:00",
+      "note": "Homepage task list; screenshot dates are historical.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "mindskip/xzs",
+      "url": "https://www.mindskip.net/style/git/images/wx/student/5.png",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "77f0fd7b8b2814c37d79c66c635c35e9e611dd59b8df6332cbcea0ff970d7a02",
+      "bytes": 330029,
+      "cached_at_utc": "2026-10-23T09:35:07.131912+00:00",
+      "note": "Answer record list; screenshot dates are historical.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "kesixin/dati",
+      "url": "https://mamba-blog-images.oss-cn-shanghai.aliyuncs.com/2025-01-09/8c32e210d0193f27524b6b5667b7650e.jpg",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "5a71a053b3a57b95766794f9b33e28c2c5ff0293ca7302dfb48fe8b94e5cf56c",
+      "bytes": 159228,
+      "cached_at_utc": "2026-10-23T09:35:07.237538+00:00",
+      "note": "Mobile homepage; layout evidence only.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "kesixin/dati",
+      "url": "https://mamba-blog-images.oss-cn-shanghai.aliyuncs.com/2025-01-09/802c77e0c66dc442e6d4a30ffc6ad361.jpg",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "f4b5fe3ef9af20fabd6d4ae3ea229b69e68a7958a0430d19d30b95eda87bf35d",
+      "bytes": 81880,
+      "cached_at_utc": "2026-10-23T09:35:07.269112+00:00",
+      "note": "Mobile answer screen; layout evidence only.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "kesixin/dati",
+      "url": "https://mamba-blog-images.oss-cn-shanghai.aliyuncs.com/2025-01-09/421474a5c7ea71e09393ddfa074a713c.jpg",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "143a4740a6c818682e81d3288574bb12bb40ed84144fdb4932e9f701bb7dacf0",
+      "bytes": 150363,
+      "cached_at_utc": "2026-10-23T09:34:08.589996+00:00",
+      "note": "Desktop screenshot; excluded from mobile layout conclusions.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "kesixin/dati",
+      "url": "https://mamba-blog-images.oss-cn-shanghai.aliyuncs.com/2025-01-09/3b76e7497ac420e6a4a7802cd4bfe791.jpg",
+      "kind": "official_screenshot",
+      "status": "downloaded",
+      "sha256": "da6f3bb30d2fca6b5360af8c4078ef20306acbc05ad1bcab126f4530b3310b0e",
+      "bytes": 173177,
+      "cached_at_utc": "2026-10-23T09:34:08.568779+00:00",
+      "note": "Desktop screenshot; excluded from mobile layout conclusions.",
+      "visually_inspected": true
+    },
+    {
+      "repo": "ankidroid/ankidroiddocs",
+      "url": "https://raw.githubusercontent.com/ankidroid/ankidroiddocs/main/manual.asc",
+      "kind": "official_manual_source",
+      "status": "downloaded",
+      "sha256": "73e28005bdbe5618cb56a06f362e73c05878a172c17fcec1a4e6e7c7a9ac8447",
+      "bytes": 68094,
+      "cached_at_utc": "2026-10-23T09:32:25.891020+00:00",
+      "note": "Source of official manual at https://docs.ankidroid.org/ ; mutable URL, hash captures downloaded version."
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "url": "https://oss.icuapi.com/docs/openapi/01study%E9%A6%96%E9%A1%B5.png",
+      "kind": "official_screenshot",
+      "status": "unavailable",
+      "reason": "HTTP 403",
+      "visually_inspected": false
+    },
+    {
+      "repo": "hcwdc/castlestudy-uniapp",
+      "url": "https://oss.icuapi.com/docs/openapi/03study%E8%80%83%E8%AF%95.png",
+      "kind": "official_screenshot",
+      "status": "unavailable",
+      "reason": "HTTP 403",
+      "visually_inspected": false
+    }
+  ]
+}
