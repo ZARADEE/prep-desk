@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="heading">组卷</view>
+  <view class="section-label">试卷模板</view>
+  <picker wx:if="{{templates.length}}" range="{{templates}}" range-key="name" value="{{selected}}" bindchange="pickTemplate">
+    <view class="picker">{{templates[selected].name}} ▼</view>
+  </picker>
+  <view wx:if="{{templates.length}}" class="muted">{{templates[selected].subject}} · {{templates[selected].minutes}} 分钟 · {{templates[selected].score}} 分</view>
+  <view wx:else class="empty">暂无试卷模板</view>
+  <input class="input" placeholder="试卷标题（可选）" value="{{title}}" bindinput="editTitle" />
+  <button class="button button-yellow" bindtap="build" disabled="{{!templates.length}}">生成试卷</button>
+  <view wx:if="{{message}}" class="muted notice">{{message}}</view>
+  <view wx:if="{{paper}}" class="paper-result">
+    <view class="card-title">{{paper.title}}</view>
+    <view class="muted">{{paper.total}} 题</view>
+    <button class="button" bindtap="startPaper">开始答题</button>
+  </view>
+</view>

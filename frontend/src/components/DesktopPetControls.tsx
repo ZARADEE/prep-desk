@@ -45,9 +45,9 @@ export function DesktopPetControls(): JSX.Element {
             <label>大小 <select aria-label="桌宠大小" value={size} disabled={!desktopAvailable} onChange={(event) => {
               const next = Number(event.target.value) as PetSize; setSize(next); window.paperHelper?.setPetSize(next);
             }}>{PET_SIZES.map((value, index) => <option key={value} value={value}>{["小", "中", "大"][index]}</option>)}</select></label>
-            <label title="在桌面自由移动，碰到边缘自动反弹"><input type="checkbox" checked={roaming} disabled={!desktopAvailable} onChange={(event) => {
+            <label title="沿桌面底部左右移动"><input type="checkbox" checked={roaming} disabled={!desktopAvailable} onChange={(event) => {
               setRoaming(event.target.checked); window.paperHelper?.setPetRoaming(event.target.checked);
-            }} /> 自动漫游</label>
+            }} /> 底部自动移动</label>
           </div>
           <div className="home-ambient-actions">
             <button type="button" className="primary-action compact" disabled={!desktopAvailable} onClick={() => window.paperHelper?.showAmbient("pet")}><Monitor size={16} />开启桌宠</button>

@@ -15,8 +15,8 @@ exit /b 0
 :fail
 set "FAIL_CODE=%errorlevel%"
 if "%FAIL_CODE%"=="0" set "FAIL_CODE=1"
-echo [paper-helper] Startup stopped. Read the error above and logs in logs\.
-echo [paper-helper] For a new computer, run setup.bat first.
+echo [paper-helper] Startup stopped. The specific error is shown above; logs are in logs\.
+echo [paper-helper] Run setup.bat only when the error reports missing or incomplete dependencies.
 if not defined PAPER_HELPER_NO_PAUSE pause
 popd
 exit /b %FAIL_CODE%

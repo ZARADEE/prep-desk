@@ -80,6 +80,7 @@ export type PracticeAttempt = {
   selected_options: string[];
   correct_options: string[];
   is_correct: boolean;
+  confidence_level?: number | null;
   created_at: string;
 };
 
@@ -103,11 +104,23 @@ export type PracticeSession = {
   questions: PracticeQuestion[];
 };
 
+export type RecentPracticeSession = {
+  id: string;
+  subject: string;
+  practice_mode: PracticeMode;
+  total_count: number;
+  answered_count: number;
+  correct_count: number;
+  created_at: string;
+  completed_at?: string | null;
+};
+
 export type PracticeAnswerResult = {
   question_id: string;
   selected_options: string[];
   correct_options: string[];
   correct: boolean;
+  confidence_level?: number | null;
   question: Question;
   answered_count: number;
   total_count: number;
@@ -208,6 +221,34 @@ export type Paper = {
     total_score: number;
   };
 };
+
+export type ExamAnswer = {
+  selected_options: string[];
+  text_answer: string;
+  confidence_level: number | null;
+  marked: boolean;
+  self_score?: number;
+};
+
+export type ExamSession = {
+  id: string;
+  paper_id: string;
+  paper: Paper;
+  answers: Record<string, ExamAnswer>;
+  started_at: string;
+  deadline_at: string;
+  submitted_at: string | null;
+  results: null | {
+    score: number;
+    graded_possible: number;
+    paper_possible: number;
+    pending_count: number;
+    high_confidence_wrong: string[];
+    questions: Record<string, { status: "correct" | "incorrect" | "pending" | "self_graded"; score: number | null; correct_options: string[] }>;
+  };
+};
+
+export type ConfidenceSummary = { buckets: Array<{ level: number; count: number; correct: number }> };
 
 export type AdmissionsFeedItem = {
   title: string;

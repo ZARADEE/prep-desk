@@ -1,0 +1,20 @@
+page { background:#f7f9f8; color:#172332; font-family:Arial,"Microsoft YaHei",sans-serif; }
+.page { padding:28rpx 28rpx 80rpx; }
+.eyebrow { color:#68777c; font-size:22rpx; letter-spacing:3rpx; font-weight:700; }
+.heading { font-size:36rpx; line-height:1.25; font-weight:800; margin:0 0 20rpx; }
+.lead { color:#526065; font-size:27rpx; line-height:1.65; }
+.card { background:#fff; border:1rpx solid #bdc7c5; padding:24rpx; margin:24rpx 0 0; }
+.card-title { font-size:31rpx; font-weight:800; }
+.muted { color:#607075; font-size:24rpx; line-height:1.6; }
+.badge { display:inline-block; background:#ffd54f; border:1rpx solid #172332; padding:5rpx 12rpx; font-size:22rpx; font-weight:700; margin-right:10rpx; }
+.button { background:#172332; color:#fff; font-weight:700; border-radius:2rpx; border:2rpx solid #172332; font-size:27rpx; margin:20rpx 0 0; }
+.button::after { border:0; }
+.tap-pressed { opacity:.72; }
+.button-light { background:#fff; color:#172332; }
+.button-yellow { background:#ffd54f; color:#172332; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:18rpx; }
+.line { height:2rpx; background:#d0d4d1; margin:20rpx 0; }
+.empty { text-align:center; color:#607075; padding:45rpx 15rpx; line-height:1.7; }
+.chip { display:inline-block; border:2rpx solid #172332; padding:9rpx 17rpx; margin:10rpx 9rpx 0 0; background:#fff; font-size:23rpx; }
+.chip.active { background:#ffd54f; font-weight:800; }
+.input { border:1rpx solid #9fadaa; background:#fff; padding:18rpx; margin:14rpx 0; font-size:27rpx; }

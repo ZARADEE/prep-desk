@@ -1,0 +1,23 @@
+.mode-row { margin-top:30rpx; }
+.timer-panel { background:#172332; color:#fff; text-align:center; padding:64rpx 12rpx; margin:30rpx 0 40rpx; }
+.timer-panel .muted { color:#d5dfe1; }
+.timer-mode { font-size:24rpx; color:#d5dfe1; }
+.timer-digits { font-size:104rpx; font-weight:800; margin:12rpx 0; }
+.minutes { border-bottom:2rpx solid #172332; width:100rpx; text-align:center; font-size:30rpx; }
+.focus-description { color:#526065; font-size:24rpx; line-height:1.7; margin-top:26rpx; }
+.session-result { margin-top:38rpx; border-top:2rpx solid #172332; padding-top:24rpx; }
+.focus-lock { position:fixed; top:0; right:0; bottom:0; left:0; z-index:100; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; padding:44rpx 36rpx calc(32rpx + env(safe-area-inset-bottom)); background:#163f35; color:#fff; }
+.focus-lock-top { display:flex; align-items:center; justify-content:space-between; gap:20rpx; font-size:25rpx; color:#cfdfd5; }
+.focus-state { border:2rpx solid #b9d3c6; padding:10rpx 18rpx; color:#fff; font-weight:700; }
+.focus-clock { text-align:center; margin:32rpx 0; }
+.focus-caption { font-size:26rpx; color:#cfdfd5; }
+.focus-digits { font-size:108rpx; font-weight:800; line-height:1.35; margin:14rpx 0; font-variant-numeric:tabular-nums; }
+.focus-message { font-size:27rpx; line-height:1.7; padding:0 20rpx; }
+.focus-lock-bottom { text-align:center; }
+.focus-interruptions { font-size:26rpx; color:#ffe39a; line-height:1.7; }
+.focus-boundary { margin:18rpx 0 24rpx; font-size:23rpx; color:#cfdfd5; line-height:1.7; }
+.focus-warning { margin-top:12rpx; color:#ffe39a; font-size:23rpx; }
+.focus-end { min-height:88rpx; line-height:84rpx; background:transparent; color:#fff; border:2rpx solid #cfdfd5; border-radius:2rpx; font-size:26rpx; }
+.focus-end::after { border:0; }
+.focus-resume { min-height:88rpx; line-height:84rpx; background:#ffd54f; color:#172332; border:2rpx solid #ffd54f; border-radius:2rpx; font-size:28rpx; font-weight:800; }
+.focus-resume::after { border:0; }

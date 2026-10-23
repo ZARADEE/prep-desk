@@ -111,6 +111,7 @@ def practice_session_payload(
             "selected_options": normalize_options(row["selected_option"]),
             "correct_options": normalize_options(row["correct_option"]),
             "is_correct": bool(row["is_correct"]),
+            "confidence_level": row["confidence_level"],
             "created_at": row["created_at"],
         }
         for row in attempt_rows

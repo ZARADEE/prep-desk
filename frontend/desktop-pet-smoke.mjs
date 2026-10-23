@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from "electron";
+import { app, BrowserWindow, ipcMain, screen, session } from "electron";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import assert from "node:assert/strict";
@@ -8,6 +8,9 @@ mkdirSync(profiles, { recursive: true });
 const profile = mkdtempSync(join(profiles, "profile-"));
 app.setPath("userData", profile);
 writeFileSync(join(profile, "desktop-pet.json"), JSON.stringify({ pack: "rubber-duck", size: 220, roaming: true }));
+app.whenReady().then(() => {
+  session.defaultSession.webRequest.onBeforeRequest({ urls: ["http://127.0.0.1:8000/*"] }, (_details, callback) => callback({ cancel: true }));
+});
 await import("./out/main/main.js");
 const output = join(import.meta.dirname, "out", "pet-smoke");
 mkdirSync(output, { recursive: true });
@@ -58,7 +61,7 @@ async function runSmoke() {
     await imageReady(pet);
     await waitFor(() => js(pet, "document.querySelector('main').dataset.action === 'walk'"), "automatic walking");
     const start = pet.getPosition();
-    await waitFor(() => { const p = pet.getPosition(); return Math.abs(p[0] - start[0]) > 12 && Math.abs(p[1] - start[1]) > 6; }, "two-axis autonomous motion");
+    await waitFor(() => { const p = pet.getPosition(); assert(Math.abs(p[1] - start[1]) <= 2, "walking stays on the floor"); return Math.abs(p[0] - start[0]) > 12; }, "horizontal autonomous motion");
     fixedSize(pet, 220);
     await js(pet, "window.paperHelper.setPetDragging(true)");
     await delay(100);
@@ -84,7 +87,7 @@ async function runSmoke() {
     fixedSize(pet, 220);
     console.log("PASS: 400 drag updates, native edge resize cancelled, fixed dimensions");
 
-    // Each edge is tested in isolation. State continues in main, so IPC cannot grow the window.
+    // Horizontal edges reflect; dragging upward then releasing falls to the floor.
     const box = { x: 12 / 256, y: 48 / 256, width: 232 / 256, height: 196 / 256 };
     for (const edge of ["left", "right", "top", "bottom"]) {
       console.log("CHECK edge",edge);
@@ -98,7 +101,7 @@ async function runSmoke() {
       const top = area.y - box.y * 220, bottom = area.y + area.height - (box.y + box.height) * 220;
       // Cross the artwork boundary by one DIP, keeping the window center on this display.
       const targetX = edge === "left" ? left - 1 : edge === "right" ? right + 1 : (left + right) / 2;
-      const targetY = edge === "top" ? top - 1 : edge === "bottom" ? bottom + 1 : (top + bottom) / 2;
+      const targetY = edge === "top" ? top - 1 : bottom + 1;
       await js(pet, "window.paperHelper.dragPetTo(" + targetX + "," + targetY + ")");
       await delay(60);
       await js(pet, "window.paperHelper.setPetDragging(false)");
@@ -107,11 +110,11 @@ async function runSmoke() {
         const [px, py] = pet.getPosition();
         assert(px + box.x * 220 >= area.x - 2 && px + (box.x + box.width) * 220 <= area.x + area.width + 2, JSON.stringify({ edge, px, py, area, box }));
         assert(py + box.y * 220 >= area.y - 2 && py + (box.y + box.height) * 220 <= area.y + area.height + 2);
-        return edge === "left" ? px > edgeStart[0] + 5 : edge === "right" ? px < edgeStart[0] - 5 : edge === "top" ? py > edgeStart[1] + 5 : py < edgeStart[1] - 5;
-      }, edge + " boundary reflection");
+        return edge === "left" ? px > edgeStart[0] + 5 : edge === "right" ? px < edgeStart[0] - 5 : Math.abs(py - bottom) <= 2;
+      }, edge + " boundary / landing");
       fixedSize(pet, 220);
     }
-    console.log("PASS: all four work-area edges reflect without clipping or growth");
+    console.log("PASS: horizontal edges reflect; released pet lands without clipping or growth");
 
     await js(main, "window.paperHelper.setPetRoaming(false)");
     await ready(pet, "[data-action=idle]");

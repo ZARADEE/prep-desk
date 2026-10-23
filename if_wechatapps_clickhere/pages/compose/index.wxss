@@ -1,0 +1,4 @@
+.picker { border:2rpx solid #172332; padding:20rpx; background:#fff; font-size:27rpx; font-weight:700; margin:15rpx 0; }
+.notice { margin-top:20rpx; }
+.section-label { font-size:24rpx; color:#526065; font-weight:700; margin:26rpx 0 12rpx; }
+.paper-result { border-top:2rpx solid #172332; margin-top:34rpx; padding-top:24rpx; }

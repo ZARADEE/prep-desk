@@ -1,0 +1,51 @@
+{
+  "description": "组卷助手：离线题库小程序",
+  "miniprogramRoot": "",
+  "projectname": "组卷助手-微信小程序",
+  "appid": "touristappid",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "compileHotReLoad": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.7.7",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "tools",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "双击启动小程序.bat",
+        "type": "file"
+      },
+      {
+        "value": "preview-qr.png",
+        "type": "file"
+      },
+      {
+        "value": "preview-info.json",
+        "type": "file"
+      }
+    ],
+    "include": []
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

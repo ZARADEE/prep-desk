@@ -1,0 +1,26 @@
+<view wx:if="{{focusLocked}}" class="focus-lock">
+  <view class="focus-lock-top"><text class="focus-state">专注中</text><text>本轮 {{minutes}} 分钟</text></view>
+  <view class="focus-clock"><view class="focus-caption">{{running ? '剩余时间' : '本轮已暂停'}}</view><view class="focus-digits">{{display}}</view><view class="focus-message">{{running ? '把这一段时间留给眼前的事。' : '专注计时已暂停，准备好后继续本轮。'}}</view></view>
+  <view class="focus-lock-bottom">
+    <view wx:if="{{interruptions}}" class="focus-interruptions">本轮离开 {{interruptions}} 次 · 离开 {{awaySeconds}} 秒</view>
+    <view wx:else class="focus-interruptions">本轮尚未离开</view>
+    <view wx:if="{{screenWarning}}" class="focus-warning">{{screenWarning}}</view>
+    <view class="focus-boundary">离开小程序时自动暂停；返回后本页保留，计时不会在后台消耗。</view>
+    <button wx:if="{{running}}" class="focus-end" bindtap="endFocus">提前结束</button>
+    <button wx:else class="focus-resume" bindtap="resumeFocus">继续专注</button>
+  </view>
+</view>
+<view wx:else class="page">
+  <view class="heading">专注计时</view>
+  <view class="mode-row"><view wx:for="{{modes}}" wx:key="key" class="chip {{mode === item.key ? 'active' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-mode="{{item.key}}" bindtap="changeMode">{{item.name}}</view></view>
+  <view class="timer-panel">
+    <view class="timer-mode">{{modeName}}</view>
+    <view class="timer-digits">{{display}}</view>
+    <view class="muted">已完成 {{completed}} 轮</view>
+  </view>
+  <view class="row"><text class="card-title">本轮时长</text><view class="row"><input class="minutes" type="number" value="{{minutes}}" bindblur="editMinutes" disabled="{{running}}" /><text>分钟</text></view></view>
+  <view wx:if="{{mode === 'focus'}}" class="focus-description">开始后锁定专注页并保持亮屏，到点自动解锁。手机系统仍可切换应用，离开会记录中断。</view>
+  <button class="button button-yellow" bindtap="toggle">{{running ? '暂停' : mode === 'focus' ? '开始专注并锁定页面' : '开始休息'}}</button>
+  <button class="button button-light" bindtap="reset">重置</button>
+  <view wx:if="{{lastSession}}" class="session-result"><view class="card-title">上轮{{lastSession.status === 'completed' ? '已完成' : '提前结束'}}</view><view class="muted">计时 {{lastSession.elapsedSeconds}} 秒 · 离开 {{lastSession.interruptions}} 次 / {{lastSession.awaySeconds}} 秒</view></view>
+</view>

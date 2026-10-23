@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_PET_PACK, PET_PACKS, PET_SIZES, PET_BEHAVIOR, isPetPack } from "../src/petConfig";
 import type { AmbientMode, PetPackId, PetSize, PetSettings, PetHitbox, PetAction } from "../src/petConfig";
-import { advanceMotion } from "./pet-physics.mjs";
+import { advanceFall, advanceGroundMotion, advanceMotion, floorY } from "./pet-physics.mjs";
 import type { MotionState } from "./pet-physics.mjs";
 
 app.disableHardwareAcceleration();
@@ -34,6 +34,8 @@ let lastPetPosition: [number, number] | null = null;
 let saveTimer: NodeJS.Timeout | null = null;
 let movementTimer: NodeJS.Timeout | null = null;
 let motion: MotionState | null = null;
+let falling = false;
+let fallVelocity = 0;
 let activeAction: PetAction = "idle";
 let hitbox: PetHitbox = { x: .08, y: .08, width: .84, height: .84 };
 let dragging = false;
@@ -95,17 +97,26 @@ function resetMotion(): void {
   if (!petWindow || petWindow.isDestroyed()) { motion = null; return; }
   const [x, y] = petWindow.getPosition();
   const speed = PET_BEHAVIOR.speedPixelsPerSecond;
-  motion = { x, y, vx: motion?.vx || speed * .86, vy: motion?.vy || -speed * .51 };
+  motion = { x, y, vx: motion?.vx || speed * .86, vy: 0 };
 }
 function movementTick(seconds: number): void {
-  if (!petWindow || petWindow.isDestroyed() || !petWindow.isVisible() || ambientMode !== "pet" || !roaming || timerHeld || dragging || menuOpen || activeAction !== "walk") return;
+  if (!petWindow || petWindow.isDestroyed() || !petWindow.isVisible() || ambientMode !== "pet" || dragging) return;
+  const area = screen.getDisplayMatching(petWindow.getBounds()).workArea;
+  if (falling) {
+    const [x, y] = petWindow.getPosition();
+    const next = advanceFall({ x, y, vy: fallVelocity }, area, visibleHitbox(), seconds);
+    fallVelocity = next.vy;
+    placePet(next.x, next.y);
+    if (next.landed) { falling = false; resetMotion(); }
+    return;
+  }
+  if (!roaming || timerHeld || menuOpen || activeAction !== "walk") return;
   if (!motion) resetMotion();
   if (!motion) return;
-  const area = screen.getDisplayMatching(petWindow.getBounds()).workArea;
-  const next = advanceMotion(motion, area, visibleHitbox(), seconds);
+  const next = advanceGroundMotion(motion, area, visibleHitbox(), seconds);
   motion = next;
   placePet(next.x, next.y);
-  if (next.hitX || next.hitY) petWindow.webContents.send("pet-motion", { direction: Math.sign(next.vx) || 1, hitX: next.hitX, hitY: next.hitY });
+  if (next.hitX) petWindow.webContents.send("pet-motion", { direction: Math.sign(next.vx) || 1, hitX: next.hitX, hitY: false });
 }
 
 function loadRenderer(window: BrowserWindow, query?: Record<string, string>): void {
@@ -233,7 +244,7 @@ function createPetWindow(): BrowserWindow {
     window.webContents.send("pet-visible", window.isVisible());
   });
   window.on("show", () => window.webContents.send("pet-visible", true));
-  window.on("hide", () => { activeAction = "idle"; dragging = false; window.webContents.send("pet-visible", false); });
+  window.on("hide", () => { activeAction = "idle"; dragging = false; falling = false; window.webContents.send("pet-visible", false); });
   window.on("moved", () => {
     if (!window.isDestroyed()) { lastPetPosition = window.getPosition() as [number, number]; scheduleSave(); layoutTimer(); }
   });
@@ -271,12 +282,14 @@ function showAmbientWindow(mode: AmbientMode): void {
     petWindow = null;
   }
   ambientMode = mode;
+  falling = false;
   scheduleSave();
   if (!petWindow || petWindow.isDestroyed()) petWindow = createPetWindow();
   const size = windowSize();
   const area = screen.getPrimaryDisplay().workArea;
   const position = lastPetPosition ?? [area.x + area.width - size - 36, area.y + area.height - size - 36];
-  placePet(...clampPosition(...position));
+  const [clampedX, clampedY] = clampPosition(...position);
+  placePet(clampedX, mode === "pet" ? floorY(screen.getDisplayNearestPoint({ x: clampedX + size / 2, y: clampedY + size / 2 }).workArea, visibleHitbox()) : clampedY);
   resetMotion();
   petWindow.showInactive();
   broadcastSettings();
@@ -310,7 +323,7 @@ function showPetMenu(): void {
     { label: "打开学习台", click: showMainWindow }, { type: "separator" },
     { label: "桌宠态", type: "radio", checked: ambientMode === "pet", click: () => showAmbientWindow("pet") },
     { label: "悬浮球态", type: "radio", checked: ambientMode === "ball", click: () => showAmbientWindow("ball") },
-    { label: "自动移动 / 边缘反弹", type: "checkbox", checked: roaming, click: (item) => setRoaming(item.checked) },
+    { label: "沿桌面底部自动移动", type: "checkbox", checked: roaming, click: (item) => setRoaming(item.checked) },
     { label: "桌宠大小", submenu: PET_SIZES.map((size, index) => ({
       label: ["小", "中", "大"][index], type: "radio" as const, checked: size === petSize, click: () => setPetSize(size)
     })) },
@@ -348,7 +361,7 @@ app.whenReady().then(() => {
   ipcMain.on('timer-sound-error',(event,failed)=>{if(event.sender===timerWindow?.webContents&&typeof failed==='boolean'){timerService!.soundError=failed?'提示音无法播放，请点击试听检查；视觉提醒和计时仍有效。':undefined;timerChanged(timerService!.snapshot());}});
   ipcMain.on('timer-expand',(event,value)=>{if(event.sender===timerWindow?.webContents&&typeof value==='boolean'){timerExpanded=value;layoutTimer();}});
   ipcMain.on('timer-resize',(event,value)=>{if(event.sender===timerWindow?.webContents&&Number.isFinite(value)){timerHeight=Math.max(105,Math.min(800,Math.ceil(value)));layoutTimer();}});
-  ipcMain.on('timer-drag',(event,p)=>{if(event.sender!==timerWindow?.webContents||!petWindow||!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;const [x,y]=petWindow.getPosition();placePet(...clampPosition(x+Math.max(-2000,Math.min(2000,p.x)),y+Math.max(-2000,Math.min(2000,p.y))));resetMotion();});
+  ipcMain.on('timer-drag',(event,p)=>{if(event.sender!==timerWindow?.webContents||!petWindow||!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;const [x,y]=petWindow.getPosition();const [nextX,nextY]=clampPosition(x+Math.max(-2000,Math.min(2000,p.x)),y+Math.max(-2000,Math.min(2000,p.y)));placePet(nextX,ambientMode==='pet'?floorY(screen.getDisplayMatching(petWindow.getBounds()).workArea,visibleHitbox()):nextY);resetMotion();});
   ipcMain.on('timer-open',event=>{if(timerSender(event))openTimerMain();});
   ipcMain.on('timer-open-paper',(event,p)=>{if(timerSender(event)&&p&&typeof p.id==='string'&&p.id.length<=150&&(p.version===undefined||typeof p.version==='string'))openTimerMain(p);});
   ipcMain.on('timer-preview-sound',(event,volume)=>{if(timerSender(event)&&Number.isFinite(volume)&&volume>=0&&volume<=1)sendTimerSound({play:true,volume});});
@@ -370,14 +383,29 @@ app.whenReady().then(() => {
   ipcMain.on("pet-context-menu", showPetMenu);
   ipcMain.on("show-pet-todos", event => { if (isPetSender(event)) showPetTodos(); });
   ipcMain.on("hide-pet-todos", event => { if (todoWindow && event.sender === todoWindow.webContents) todoWindow.hide(); });
-  ipcMain.on("pet-dragging", (event, next) => { if (isPetSender(event)) { dragging = next === true; resetMotion(); } });
+  ipcMain.on("pet-dragging", (event, next) => {
+    if (!isPetSender(event)) return;
+    dragging = next === true;
+    if (dragging) {
+      falling = false;
+      fallVelocity = 0;
+    } else if (ambientMode === "pet" && petWindow) {
+      const area = screen.getDisplayMatching(petWindow.getBounds()).workArea;
+      const [, y] = petWindow.getPosition();
+      const bottom = floorY(area, visibleHitbox());
+      falling = y < bottom - 4;
+      fallVelocity = 0;
+    }
+    resetMotion();
+  });
   ipcMain.on("pet-action", (event, payload: { action: PetAction; hitbox: PetHitbox }) => {
     if (!isPetSender(event) || !payload || !["idle", "walk", "click", "special"].includes(payload.action)) return;
     const box = payload.hitbox;
     if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite) || box.x < 0 || box.y < 0 || box.width <= 0 || box.height <= 0 || box.x + box.width > 1.001 || box.y + box.height > 1.001) return;
     activeAction = payload.action; hitbox = box;
     const [x, y] = petWindow!.getPosition();
-    placePet(...clampPosition(x, y)); resetMotion();
+    const [nextX, nextY] = clampPosition(x, y);
+    placePet(nextX, ambientMode === "pet" && !dragging && !falling ? floorY(screen.getDisplayMatching(petWindow!.getBounds()).workArea, visibleHitbox()) : nextY); resetMotion();
     petWindow!.webContents.send("pet-motion", { direction: Math.sign(motion?.vx ?? 1), hitX: false, hitY: false });
   });
   ipcMain.on("pet-drag-to", (event, point: { x: number; y: number }) => {
@@ -391,10 +419,11 @@ app.whenReady().then(() => {
   }, PET_BEHAVIOR.moveIntervalMs);
   screen.on("display-metrics-changed", () => {
     if (!petWindow) return;
-    placePet(...clampPosition(...petWindow.getPosition() as [number, number])); resetMotion();
+    const [x, y] = clampPosition(...petWindow.getPosition() as [number, number]);
+    placePet(x, ambientMode === "pet" ? floorY(screen.getDisplayMatching(petWindow.getBounds()).workArea, visibleHitbox()) : y); falling = false; resetMotion();
   });
   app.on("activate", showMainWindow);
-  screen.on('display-removed',()=>{if(petWindow)placePet(...clampPosition(...petWindow.getPosition() as [number,number]));layoutTimer();});
+  screen.on('display-removed',()=>{if(petWindow){const [x,y]=clampPosition(...petWindow.getPosition() as [number,number]);placePet(x,ambientMode==='pet'?floorY(screen.getDisplayMatching(petWindow.getBounds()).workArea,visibleHitbox()):y);}layoutTimer();});
 });
 app.on("window-all-closed", () => { if (process.platform !== "darwin" && isQuitting) app.quit(); });
 app.on("before-quit", () => { isQuitting = true; if (movementTimer) clearInterval(movementTimer); timerService?.close(); saveSettings(); });

@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="page-header"><text class="heading">刷题</text><text class="muted">{{wrongCount}} 道错题待复习</text></view>
+
+  <view class="section-label">题库</view>
+  <view class="bank-list">
+    <view wx:for="{{banks}}" wx:key="id" class="bank-row {{bankId === item.id ? 'selected' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-id="{{item.id}}" bindtap="selectBank">
+      <view class="bank-radio">{{bankId === item.id ? '●' : ''}}</view>
+      <text class="bank-name">{{item.name}}</text>
+      <text class="muted">{{item.count}} 题</text>
+    </view>
+  </view>
+
+  <view class="section-label">题型</view>
+  <view class="mode-row">
+    <view wx:for="{{modes}}" wx:key="key" class="mode-item {{mode === item.key ? 'active' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-mode="{{item.key}}" bindtap="selectMode">{{item.name}}</view>
+  </view>
+  <picker wx:if="{{mode === 'subjective'}}" range="{{subtypeNames}}" value="{{subtypeIndex}}" bindchange="pickSubtype">
+    <view class="filter-row"><text>主观题型</text><text class="filter-value">{{subtypeNames[subtypeIndex]}}</text><text class="filter-arrow">›</text></view>
+  </picker>
+
+  <view class="section-label">范围</view>
+  <picker range="{{majorNames}}" value="{{majorIndex}}" bindchange="pickMajor">
+    <view class="filter-row"><text>一级范围</text><text class="filter-value">{{major || '全部'}}</text><text class="filter-arrow">›</text></view>
+  </picker>
+  <picker wx:if="{{subs.length}}" range="{{subNames}}" value="{{subIndex}}" bindchange="pickSub">
+    <view class="filter-row"><text>二级范围</text><text class="filter-value">{{sub || '全部'}}</text><text class="filter-arrow">›</text></view>
+  </picker>
+  <view class="filter-row"><text>练习题数</text><input class="count-input" type="number" value="{{count}}" bindblur="editCount" /><text class="muted">题</text></view>
+  <view class="available">当前范围 {{available}} 题，本次 {{actualCount}} 题</view>
+  <button class="button start-button" disabled="{{!available}}" bindtap="start">开始练习</button>
+  <view wx:if="{{resumable}}" class="resume-row" hover-class="tap-pressed" hover-stay-time="90" bindtap="resume"><text>继续练习 · {{resumeTitle}}</text><text>{{resumeProgress}} ›</text></view>
+
+  <view class="todo-section">
+    <view class="section-label">待办</view>
+    <view class="row"><input class="input todo-input" placeholder="添加待办" value="{{newTodo}}" bindinput="inputTodo" confirm-type="done" bindconfirm="addTodo" /><button class="add-button" bindtap="addTodo">＋</button></view>
+    <view wx:for="{{todos}}" wx:key="id" class="todo {{item.done ? 'completed' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-id="{{item.id}}" bindtap="toggleTodo"><text>{{item.done ? '☑' : '□'}}</text><text>{{item.text}}</text></view>
+  </view>
+</view>

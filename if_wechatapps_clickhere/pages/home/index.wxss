@@ -1,0 +1,26 @@
+.page-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:30rpx; }
+.section-label { font-size:24rpx; color:#526065; font-weight:700; margin:26rpx 0 12rpx; }
+.bank-list { border-top:1rpx solid #bdc7c5; }
+.bank-row { display:flex; align-items:center; gap:16rpx; min-height:90rpx; border-bottom:1rpx solid #bdc7c5; padding:0 10rpx; }
+.bank-row.selected { background:#e2f1e6; }
+.bank-radio { flex:none; width:30rpx; height:30rpx; line-height:26rpx; border:2rpx solid #172332; border-radius:50%; text-align:center; font-size:20rpx; }
+.bank-name { flex:1; min-width:0; font-size:27rpx; font-weight:700; }
+.mode-row { display:flex; border:2rpx solid #172332; }
+.mode-item { flex:1; text-align:center; padding:17rpx 0; font-size:26rpx; }
+.mode-item.active { background:#ffd54f; font-weight:800; }
+.mode-item + .mode-item { border-left:2rpx solid #172332; }
+.filter-row { display:flex; align-items:center; min-height:84rpx; border-bottom:1rpx solid #bdc7c5; gap:16rpx; font-size:26rpx; }
+.filter-row > text:first-child { flex:none; width:145rpx; }
+.filter-value { flex:1; min-width:0; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.filter-arrow { font-size:40rpx; color:#607075; }
+.count-input { flex:1; text-align:right; min-height:70rpx; }
+.available { margin-top:20rpx; font-size:24rpx; color:#526065; }
+.start-button { margin-top:16rpx; }
+.resume-row { display:flex; justify-content:space-between; gap:12rpx; border-bottom:1rpx solid #bdc7c5; padding:22rpx 2rpx; font-size:24rpx; color:#216d60; }
+.resume-row text:first-child { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.resume-row text:last-child { flex:none; }
+.todo-section { margin-top:48rpx; border-top:2rpx solid #172332; }
+.todo-input { flex:1; min-width:0; }
+.add-button { width:75rpx; height:75rpx; line-height:68rpx; padding:0; background:#ffd54f; border:2rpx solid #172332; border-radius:0; font-weight:800; }
+.todo { display:flex; gap:20rpx; padding:16rpx 0; border-bottom:1rpx solid #d6d9d6; font-size:26rpx; }
+.todo.completed { color:#879194; text-decoration:line-through; }

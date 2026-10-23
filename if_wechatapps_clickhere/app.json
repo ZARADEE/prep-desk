@@ -1,0 +1,117 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/compose/index",
+    "pages/wrong/index",
+    "pages/timer/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#172332",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "组卷助手",
+    "backgroundColor": "#f7f9f8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#606b70",
+    "selectedColor": "#172332",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/tab/home.png",
+        "selectedIconPath": "assets/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/compose/index",
+        "text": "组卷",
+        "iconPath": "assets/tab/compose.png",
+        "selectedIconPath": "assets/tab/compose-active.png"
+      },
+      {
+        "pagePath": "pages/wrong/index",
+        "text": "错题",
+        "iconPath": "assets/tab/wrong.png",
+        "selectedIconPath": "assets/tab/wrong-active.png"
+      },
+      {
+        "pagePath": "pages/timer/index",
+        "text": "专注",
+        "iconPath": "assets/tab/timer.png",
+        "selectedIconPath": "assets/tab/timer-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "subPackages": [
+    {
+      "root": "packages/pack01",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack02",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack03",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack04",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack05",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack06",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack07",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack08",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack09",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack10",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "packages/pack11",
+      "pages": [
+        "index"
+      ]
+    }
+  ]
+}

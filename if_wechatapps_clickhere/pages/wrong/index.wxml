@@ -1,0 +1,7 @@
+<view class="page">
+  <view class="page-header"><text class="heading">错题</text><text class="muted">{{total}} 题</text></view>
+  <view wx:if="{{!groups.length}}" class="empty">暂无错题</view>
+  <view wx:for="{{groups}}" wx:key="subject" class="wrong-row" hover-class="tap-pressed" hover-stay-time="90" data-subject="{{item.subject}}" bindtap="openGroup">
+    <text class="wrong-subject">{{item.subject}}</text><text class="muted">{{item.count}} 题</text><text class="arrow">›</text>
+  </view>
+</view>

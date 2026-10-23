@@ -10,8 +10,13 @@ backend/data/*
 !backend/data/bundled/**
 backend/.pytest_cache/
 frontend/node_modules/
+/if_wechatapps_clickhere/tools/node_modules/
+/if_wechatapps_clickhere/project.private.config.json
+/if_wechatapps_clickhere/preview-qr.png
+/if_wechatapps_clickhere/preview-info.json
 frontend/dist/
 frontend/out/
+/out/
 # Full third-party files retained only as local research evidence.
 docs/research/github-competitors-2026-10-15/
 .env

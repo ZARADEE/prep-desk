@@ -1,0 +1,4 @@
+.page-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:24rpx; }
+.wrong-row { display:flex; align-items:center; min-height:100rpx; gap:18rpx; border-bottom:1rpx solid #bdc7c5; }
+.wrong-subject { flex:1; font-size:27rpx; font-weight:700; }
+.arrow { font-size:40rpx; color:#607075; }

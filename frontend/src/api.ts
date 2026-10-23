@@ -3,12 +3,16 @@ import type {
   AdmissionsFeed,
   AdmissionsScorelineDetail,
   AdmissionsScorelineIndex,
+  ConfidenceSummary,
+  ExamAnswer,
+  ExamSession,
   Paper,
   PaperTemplate,
   QuestionBank,
   PracticeMode,
   PracticeAnswerResult,
   PracticeCatalog,
+  RecentPracticeSession,
   PracticeSession,
   Question,
   ReviewPage,
@@ -18,7 +22,9 @@ import type {
 
 const runtimeApiBase =
   typeof window !== "undefined" && window.location.protocol.startsWith("http")
-    ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+    ? window.location.port === "5173"
+      ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+      : `${window.location.origin}/api`
     : "http://127.0.0.1:8000/api";
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? runtimeApiBase;
 
@@ -252,6 +258,10 @@ export async function getPracticeCatalog(): Promise<PracticeCatalog> {
   return request("/practice/catalog");
 }
 
+export async function getRecentPracticeSessions(): Promise<RecentPracticeSession[]> {
+  return request("/practice/recent?limit=12");
+}
+
 export async function startPractice(payload: {
   question_ids?: string[];
   subject: string;
@@ -276,13 +286,49 @@ export async function getPracticeSession(sessionId: string): Promise<PracticeSes
 export async function answerPracticeQuestion(
   sessionId: string,
   questionId: string,
-  selectedOptions: string[]
+  selectedOptions: string[],
+  confidenceLevel: number | null = null
 ): Promise<PracticeAnswerResult> {
   return request(`/practice/sessions/${sessionId}/answer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question_id: questionId, selected_options: selectedOptions })
+    body: JSON.stringify({ question_id: questionId, selected_options: selectedOptions, confidence_level: confidenceLevel })
   });
+}
+
+export function startExam(paperId: string, sourceVersion?: string): Promise<ExamSession> {
+  return request("/exams", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paper_id: paperId, source_version: sourceVersion }) });
+}
+
+export function getExam(examId: string): Promise<ExamSession> {
+  return request(`/exams/${encodeURIComponent(examId)}`);
+}
+
+export function getLatestExam(paperId: string): Promise<ExamSession | null> {
+  return request(`/exams/paper/${encodeURIComponent(paperId)}/latest`);
+}
+
+export function saveExamAnswer(examId: string, questionId: string, answer: ExamAnswer): Promise<void> {
+  return request(`/exams/${encodeURIComponent(examId)}/answers/${encodeURIComponent(questionId)}`,
+    { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(answer) });
+}
+
+export function submitExam(examId: string): Promise<ExamSession> {
+  return request(`/exams/${encodeURIComponent(examId)}/submit`, { method: "POST" });
+}
+
+export function selfGradeExam(examId: string, questionId: string, score: number): Promise<ExamSession> {
+  return request(`/exams/${encodeURIComponent(examId)}/self-grade/${encodeURIComponent(questionId)}`,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }) });
+}
+
+export function examPreviewUrl(examId: string, questionId: string, kind: "question" | "analysis" = "question"): string {
+  return `${API_BASE}/exams/${encodeURIComponent(examId)}/preview/${encodeURIComponent(questionId)}?kind=${kind}`;
+}
+
+export function getConfidenceSummary(): Promise<ConfidenceSummary> {
+  return request("/exams/confidence/summary");
 }
 
 export async function getWrongBook(filters: {

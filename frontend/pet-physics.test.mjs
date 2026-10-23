@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { advanceMotion } from "./electron/pet-physics.mjs";
+import { advanceFall, advanceGroundMotion, advanceMotion, floorY } from "./electron/pet-physics.mjs";
 
 const area = { x: -1920, y: 40, width: 1920, height: 1040 };
 const box = { x: 10, y: 14, width: 180, height: 192 };
@@ -40,4 +40,18 @@ test("a display smaller than the pet produces finite stationary coordinates", ()
   const next = advanceMotion({ x: 500, y: 500, vx: 54, vy: 28 }, { x: 0, y: 0, width: 90, height: 90 }, box, .1);
   assert(Number.isFinite(next.x) && Number.isFinite(next.y));
   assert.equal(next.vx, 0); assert.equal(next.vy, 0);
+});
+test("ground motion keeps the pet on the display bottom while moving horizontally", () => {
+  const ground = floorY(area, box);
+  const next = advanceGroundMotion({ x: -1000, y: 100, vx: 54, vy: 500 }, area, box, .1);
+  assert.equal(next.y, ground);
+  assert.equal(next.vy, 0);
+  assert.equal(next.x, -994.6);
+});
+test("fall motion reaches the bottom and reports landing", () => {
+  const ground = floorY(area, box);
+  const next = advanceFall({ x: -1000, y: ground - 80, vy: 0 }, area, box, .4);
+  assert.equal(next.y, ground);
+  assert.equal(next.vy, 0);
+  assert.equal(next.landed, true);
 });

@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { getAdmissionsFeed, getScorelineDetail, getScorelineIndex } from "../api";
+import { pullSyncState, pushSyncState } from "../sync";
 import { DesktopPetControls } from "./DesktopPetControls";
 import { petAsset } from "../petConfig";
 import type {
@@ -342,6 +343,19 @@ function loadTodoItems(): TodoItem[] {
   }
 }
 
+function normalizeTodoItems(value: unknown): TodoItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => ({
+    id: typeof item?.id === "string" && item.id ? item.id : `todo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: typeof item?.text === "string" ? item.text : "",
+    date: typeof item?.date === "string" && item.date ? item.date : todayKey(),
+    reminderAt: typeof item?.reminderAt === "string" ? item.reminderAt : "",
+    remindedAt: typeof item?.remindedAt === "number" ? item.remindedAt : null,
+    done: Boolean(item?.done),
+    createdAt: typeof item?.createdAt === "number" ? item.createdAt : Date.now()
+  }));
+}
+
 function todayKey(reference = new Date()): string {
   const year = reference.getFullYear();
   const month = String(reference.getMonth() + 1).padStart(2, "0");
@@ -441,6 +455,7 @@ export function HomeDashboard({ questionBanks }: Props): JSX.Element {
   const [dragging, setDragging] = useState<HomePanelId | null>(null);
   const [target, setTarget] = useState<TargetState>(loadTargetState);
   const [todoItems, setTodoItems] = useState<TodoItem[]>(loadTodoItems);
+  const [syncStatus, setSyncStatus] = useState<"checking" | "syncing" | "synced" | "offline">("checking");
   const reviewProgress=useReviewSummary();
   const [todoViewDate, setTodoViewDate] = useState(todayKey());
   const [todoBatchDate, setTodoBatchDate] = useState(todayKey());
@@ -450,6 +465,13 @@ export function HomeDashboard({ questionBanks }: Props): JSX.Element {
   const [todoReminder, setTodoReminder] = useState<TodoReminder | null>(null);
   const [todoReminderQueue, setTodoReminderQueue] = useState<TodoReminder[]>([]);
   const [todoReminderTick, setTodoReminderTick] = useState(0);
+  const syncReadyRef = useRef(false);
+  const syncBusyRef = useRef(false);
+  const syncSnapshotRef = useRef<{ todos?: string; target?: string }>({});
+  const todoItemsRef = useRef(todoItems);
+  const targetRef = useRef(target);
+  todoItemsRef.current = todoItems;
+  targetRef.current = target;
   const [buddyMessage, setBuddyMessage] = useState<string | null>(null);
   const [buddyPetted, setBuddyPetted] = useState(false);
   const [buddyBounceAlt, setBuddyBounceAlt] = useState(false);
@@ -640,6 +662,103 @@ export function HomeDashboard({ questionBanks }: Props): JSX.Element {
   useEffect(() => {
     window.localStorage.setItem(TODO_KEY, JSON.stringify(todoItems));
   }, [todoItems]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const localTodosAtStart = JSON.stringify(todoItemsRef.current);
+    const localTargetAtStart = JSON.stringify(targetRef.current);
+    void pullSyncState(["todos", "target"]).then((state) => {
+      if (cancelled) return;
+      if (state.todos !== undefined) {
+        const value = normalizeTodoItems(state.todos);
+        syncSnapshotRef.current.todos = JSON.stringify(value);
+        if (JSON.stringify(todoItemsRef.current) === localTodosAtStart) {
+          todoItemsRef.current = value;
+          setTodoItems(value);
+        }
+      }
+      if (state.target && typeof state.target === "object") {
+        const value = state.target as Partial<TargetState>;
+        const normalized = { school: typeof value.school === "string" ? value.school : "", major: typeof value.major === "string" ? value.major : "" };
+        syncSnapshotRef.current.target = JSON.stringify(normalized);
+        if (JSON.stringify(targetRef.current) === localTargetAtStart) {
+          targetRef.current = normalized;
+          setTarget(normalized);
+        }
+      }
+      syncReadyRef.current = true;
+      setSyncStatus("synced");
+      void pushHomeChanges();
+    }).catch(() => {
+      if (cancelled) return;
+      syncReadyRef.current = true;
+      setSyncStatus("offline");
+      void pushHomeChanges();
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function pushHomeChanges(): Promise<void> {
+    if (!syncReadyRef.current || syncBusyRef.current) return;
+    const todos = todoItemsRef.current;
+    const currentTarget = targetRef.current;
+    const todosJson = JSON.stringify(todos);
+    const targetJson = JSON.stringify(currentTarget);
+    const changes: Record<string, unknown> = {};
+    if (syncSnapshotRef.current.todos !== todosJson) changes.todos = todos;
+    if (syncSnapshotRef.current.target !== targetJson) changes.target = currentTarget;
+    if (Object.keys(changes).length === 0) return;
+    syncBusyRef.current = true;
+    setSyncStatus("syncing");
+    try {
+      await pushSyncState(changes);
+      if (changes.todos !== undefined) syncSnapshotRef.current.todos = todosJson;
+      if (changes.target !== undefined) syncSnapshotRef.current.target = targetJson;
+      setSyncStatus("synced");
+    } catch {
+      setSyncStatus("offline");
+      /* The polling cycle retries local changes after a temporary disconnect. */
+    }
+    finally { syncBusyRef.current = false; }
+  }
+
+  useEffect(() => {
+    if (!syncReadyRef.current) return;
+    const timer = window.setTimeout(() => { void pushHomeChanges(); }, 250);
+    return () => window.clearTimeout(timer);
+  }, [todoItems, target]);
+
+  useEffect(() => {
+    let live = true;
+    const timer = window.setInterval(() => {
+      if (!syncReadyRef.current || syncBusyRef.current) return;
+      void pullSyncState(["todos", "target"]).then((state) => {
+        if (!live) return;
+        if (state.todos !== undefined) {
+          const remote = normalizeTodoItems(state.todos);
+          const remoteJson = JSON.stringify(remote);
+          const known = syncSnapshotRef.current.todos;
+          if (remoteJson !== known) {
+            if (JSON.stringify(todoItemsRef.current) === known) { todoItemsRef.current = remote; setTodoItems(remote); }
+            syncSnapshotRef.current.todos = remoteJson;
+          }
+        }
+        if (state.target && typeof state.target === "object") {
+          const value = state.target as Partial<TargetState>;
+          const remote = { school: typeof value.school === "string" ? value.school : "", major: typeof value.major === "string" ? value.major : "" };
+          const remoteJson = JSON.stringify(remote);
+          const known = syncSnapshotRef.current.target;
+          if (remoteJson !== known) {
+            if (JSON.stringify(targetRef.current) === known) { targetRef.current = remote; setTarget(remote); }
+            syncSnapshotRef.current.target = remoteJson;
+          }
+        }
+        setSyncStatus("synced");
+        void pushHomeChanges();
+      }).catch(() => { if (live) setSyncStatus("offline"); });
+    }, 5000);
+    return () => { live = false; window.clearInterval(timer); };
+  }, []);
 
   useEffect(() => {
     if (todoReminderTimerRef.current !== null) {
@@ -1227,6 +1346,10 @@ export function HomeDashboard({ questionBanks }: Props): JSX.Element {
   return (
     <div className="home-layout">
       <DesktopPetControls />
+      <div className={`home-sync-status sync-${syncStatus}`} role="status" aria-live="polite">
+        <span aria-hidden="true" />
+        {syncStatus === "checking" ? "正在连接同步" : syncStatus === "syncing" ? "正在保存到项目数据库" : syncStatus === "synced" ? "多设备数据已同步" : "同步暂不可用 · 连接恢复后自动重试"}
+      </div>
       <div className="home-grid">{panelOrder.map((id) => renderPanel(id))}</div>
 
       {todoPraise ? (

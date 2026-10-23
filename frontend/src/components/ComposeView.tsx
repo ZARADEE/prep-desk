@@ -1,14 +1,15 @@
-import { AlertTriangle, Check, Download, LockKeyhole, RefreshCw, Shuffle, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Check, Download, LockKeyhole, Play, RefreshCw, Shuffle, SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AgentDialog, getAgentSettings } from "./AgentDialog";
 import type { AgentSettings } from "../types";
-import { composePaper, exportDownloadUrl, exportPaper, getQuestions, getTemplates, questionPreviewUrl } from "../api";
-import type { Paper, PaperTemplate, Question, QuestionBank, Tag } from "../types";
+import { composePaper, exportDownloadUrl, exportPaper, getLatestExam, getQuestions, getTemplates, questionPreviewUrl, startExam } from "../api";
+import type { ExamSession, Paper, PaperTemplate, Question, QuestionBank, Tag } from "../types";
 import { buildPaperPackage, getPaper, packagePreviewUrl, preparePaperPackage } from '../api';
 import type { PaperPackage } from '../api';
 import type { PaperLink } from '../timer/model';
 import { TimerSetup } from './TimerCard';
 import { openTimer } from '../timer/client';
+import { ExamView } from './ExamView';
 
 type Props = {
   tags: Tag[];
@@ -40,6 +41,9 @@ export function ComposeView({ tags: initialTags, questionBanks, onChanged, timer
   const [packageBusy,setPackageBusy]=useState(false);
   const [downloadId,setDownloadId]=useState('');
   const [showTiming,setShowTiming]=useState(false);
+  const [exam,setExam]=useState<ExamSession|null>(null);
+  const [latestExam,setLatestExam]=useState<ExamSession|null>(null);
+  const [examBusy,setExamBusy]=useState(false);
   useEffect(()=>{if(!timerPaper)return;let cancelled=false;setShowTiming(false);setPackageState(null);setDownloadId('');void getPaper(timerPaper.id,timerPaper.version).then(value=>{if(!cancelled){setPaper(value);setTitle(value.title);setTemplateId(value.template_id);setSeed(value.seed);}}).catch(e=>{if(!cancelled)setMessage(String(e));});return()=>{cancelled=true;};},[timerPaper]);
 
   useEffect(() => {
@@ -108,13 +112,28 @@ export function ComposeView({ tags: initialTags, questionBanks, onChanged, timer
         required_tags: [requiredMajorTag, requiredSubTag].filter(Boolean)
       });
       setPaper(nextPaper);
-      setPackageState(null);setDownloadId('');setShowTiming(false);
+      setPackageState(null);setDownloadId('');setShowTiming(false);setExam(null);setLatestExam(null);
       onChanged();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "组卷失败");
     } finally {
       setBusy(false);
     }
+  }
+
+  useEffect(() => {
+    if (!paper) return;
+    let active = true;
+    void getLatestExam(paper.id).then(value => { if (active) setLatestExam(value); }).catch(() => {});
+    return () => { active = false; };
+  }, [paper?.id]);
+
+  async function openExam(existing?: ExamSession): Promise<void> {
+    if (!paper || !paper.validation.valid) return;
+    setExamBusy(true); setMessage("");
+    try { setExam(existing ?? await startExam(paper.id, paper.export_version)); setLatestExam(null); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "无法开始在线考试"); }
+    finally { setExamBusy(false); }
   }
 
   async function download(format: "pdf" | "docx", variant: "question" | "answer"): Promise<void> {
@@ -139,6 +158,8 @@ export function ComposeView({ tags: initialTags, questionBanks, onChanged, timer
     catch(e){setMessage(e instanceof Error?e.message:'无法准备成套导出');}
     finally{setPackageBusy(false);}
   }
+
+  if (exam) return <ExamView exam={exam} onChange={setExam} onClose={() => { setExam(null); if (paper) void getLatestExam(paper.id).then(setLatestExam).catch(() => {}); }} onRestart={() => { setExam(null); void openExam(); }} />;
 
   return (
     <div className="compose-layout">
@@ -264,6 +285,7 @@ export function ComposeView({ tags: initialTags, questionBanks, onChanged, timer
             {packageState&&<div className="panel package-confirm" role="group" aria-label="检查导出内容"><strong>{packageState.issues.length?'部分答案或素材缺失':'导出未完成'}</strong><p>本次版本已固定，重试仍使用相同内容。</p><ul>{packageState.issues.map(issue=><li key={issue.question_id}>第 {issue.number} 题：{issue.messages.join('；')}</li>)}</ul><button disabled={packageBusy} onClick={()=>void finishPackage(packageState,true)}>{packageState.issues.length?'带缺失标注导出':'重试整套导出'}</button><button disabled={packageBusy} onClick={()=>setPackageState(null)}>取消</button></div>}
             {downloadId&&<div className="notice notice-info">整套文件已生成，题卷与答案册使用同一版本。<a href={exportDownloadUrl(downloadId)} target="_blank" rel="noreferrer" download>下载 ZIP</a></div>}
             <div className="panel paper-timer"><strong>用本卷时长计时</strong><p>计划 {paper.template?.duration_minutes??'待设置'} 分钟。到点提醒并记录超时，点击结束后保存用时。</p>{paper.export_version&&<small>关联导出版本：{paper.export_version}</small>}{showTiming?<TimerSetup key={paper.id+String(paper.export_version)} paper={{id:paper.id,version:paper.export_version}} title={paper.title} minutes={paper.template?.duration_minutes} onCancel={()=>setShowTiming(false)} onStarted={()=>{setShowTiming(false);openTimer();}}/>:<button disabled={packageBusy} onClick={()=>setShowTiming(true)}>准备计时</button>}</div>
+            <div className="panel paper-exam-launch"><div><strong>直接做这份卷子</strong><p>在应用内答题，自动暂存，交卷后查看客观题成绩并自评主观题。</p></div><div>{latestExam && !latestExam.submitted_at && <button type="button" disabled={examBusy||packageBusy} onClick={() => void openExam(latestExam)}><Play size={16} />继续作答</button>}<button className="primary-action compact" type="button" disabled={examBusy||packageBusy} onClick={() => void openExam()}><Play size={17} />{examBusy ? "正在准备…" : "开始作答"}</button></div></div>
             <div className="paper-sections">
               {paper.composition && <div className="notice notice-info">{paper.composition.rationale}</div>}
               {paper.sections.map((section) => {

@@ -19,6 +19,8 @@ import {
   deleteWrongBookItem,
   exportPracticeMistakes,
   getPracticeCatalog,
+  getConfidenceSummary,
+  getRecentPracticeSessions,
   getPracticeSession,
   getWrongBook,
   practiceExportDownloadUrl,
@@ -31,10 +33,13 @@ import type {
   PracticeCatalog,
   PracticeMajorTag,
   PracticeQuestion,
+  RecentPracticeSession,
   PracticeSession,
   PracticeSubject,
   WrongBookItem
 } from "../types";
+import type { ConfidenceSummary } from "../types";
+import { ConfidencePicker, ConfidenceSummaryView, CONFIDENCE_LABELS } from "./ConfidencePicker";
 
 import { QuestionReflection, learningRequest } from "./LearningPanel";
 import type { KnowledgeCard } from "./LearningPanel";
@@ -75,8 +80,11 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
   const [subTag, setSubTag] = useState("");
   const [count, setCount] = useState(10);
   const [session, setSession] = useState<PracticeSession | null>(null);
+  const [recentSessions, setRecentSessions] = useState<RecentPracticeSession[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selectedConfidence, setSelectedConfidence] = useState<number | null>(null);
+  const [confidenceSummary, setConfidenceSummary] = useState<ConfidenceSummary | null>(null);
   const [answerResult, setAnswerResult] = useState<PracticeAnswerResult | null>(null);
   const [wrongBook, setWrongBook] = useState<WrongBookItem[]>([]);
   const [showWrongBook, setShowWrongBook] = useState(false);
@@ -111,6 +119,14 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
         setSubTag(nextMajor?.sub_tags[0]?.value ?? "");
       })
       .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "题库目录加载失败。"));
+  }, []);
+  useEffect(() => { void getConfidenceSummary().then(setConfidenceSummary).catch(() => {}); }, []);
+  useEffect(() => {
+    let live = true;
+    const refresh = () => { void getRecentPracticeSessions().then(value => { if (live) setRecentSessions(value); }).catch(() => {}); };
+    refresh();
+    const timer = window.setInterval(refresh, 10000);
+    return () => { live = false; window.clearInterval(timer); };
   }, []);
 
   const selectedSubject = useMemo(
@@ -168,11 +184,28 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
     finally { setBusy(false); }
   }
 
+  useEffect(() => {
+    if (!session || session.completed) return;
+    let live = true;
+    let checking = false;
+    const timer = window.setInterval(() => {
+      if (checking) return;
+      checking = true;
+      void getPracticeSession(session.id).then(latest => {
+        if (!live || latest.answered_count <= session.answered_count) return;
+        setSession(current => current?.id === latest.id && latest.answered_count > current.answered_count ? latest : current);
+        if (latest.questions[currentIndex]?.attempt) restoreQuestion(latest, currentIndex);
+      }).catch(() => {}).finally(() => { checking = false; });
+    }, 4000);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [session?.id, session?.completed, session?.answered_count, currentIndex]);
+
   function restoreQuestion(active: PracticeSession, index: number, drafts = draftAnswers): void {
     const question = active.questions[index];
     const attempt = question?.attempt;
     setSelectedOptions(attempt?.selected_options ?? drafts[question?.id] ?? []);
-    setAnswerResult(attempt ? { question_id: question.id, selected_options: attempt.selected_options, correct_options: attempt.correct_options, correct: attempt.is_correct, question, answered_count: active.answered_count, total_count: active.total_count, wrong_question_ids: active.wrong_question_ids } : null);
+    setSelectedConfidence(attempt?.confidence_level ?? null);
+    setAnswerResult(attempt ? { question_id: question.id, selected_options: attempt.selected_options, correct_options: attempt.correct_options, correct: attempt.is_correct, confidence_level: attempt.confidence_level, question, answered_count: active.answered_count, total_count: active.total_count, wrong_question_ids: active.wrong_question_ids } : null);
   }
 
   function jump(index: number): void {
@@ -221,6 +254,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
       setSession(nextSession);
       setCurrentIndex(0);
       setSelectedOptions([]);
+      setSelectedConfidence(null);
       setAnswerResult(null);
       return true;
     } catch (reason: unknown) {
@@ -291,18 +325,19 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
     setBusy(true);
     setError("");
     try {
-      const result = await answerPracticeQuestion(session.id, currentQuestion.id, selectedOptions);
+      const result = await answerPracticeQuestion(session.id, currentQuestion.id, selectedOptions, selectedConfidence);
       const completed = result.answered_count >= result.total_count;
       setLearningRevision(value => value + 1);
       void getPracticeCatalog().then(setCatalog).catch(() => {});
       setAnswerResult(result);
       setSession((current) => current ? {
         ...current,
-        questions: current.questions.map(q => q.id === result.question_id ? { ...result.question, answer_mode: q.answer_mode, attempt: { question_id: q.id, selected_options: result.selected_options, correct_options: result.correct_options, is_correct: result.correct, created_at: new Date().toISOString() } } : q),
+        questions: current.questions.map(q => q.id === result.question_id ? { ...result.question, answer_mode: q.answer_mode, attempt: { question_id: q.id, selected_options: result.selected_options, correct_options: result.correct_options, is_correct: result.correct, confidence_level: result.confidence_level, created_at: new Date().toISOString() } } : q),
         answered_count: result.answered_count,
         wrong_question_ids: result.wrong_question_ids,
         completed
       } : current);
+      void getConfidenceSummary().then(setConfidenceSummary).catch(() => {});
       if (completed && session.mode === "wrong_book") {
         setWrongBookVictoryLine(pickWrongBookVictoryLine());
       }
@@ -383,6 +418,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
     setSession(null);
     setCurrentIndex(0);
     setSelectedOptions([]);
+    setSelectedConfidence(null);
     setAnswerResult(null);
     setWrongBookVictoryLine("");
   }
@@ -424,6 +460,12 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
               </div>
               <span className="practice-count-mark">{totalAvailable} 道可用</span>
             </div>
+            {recentSessions.length > 0 && <section className="recent-practice" aria-label="最近练习记录">
+              <div><b>最近练习 / 跨设备继续</b><small>作答记录保存在同一份本地数据库</small></div>
+              <div className="recent-practice-list">{recentSessions.slice(0, 5).map(item => <button key={item.id} type="button" onClick={() => void resume(item.id)} disabled={busy}>
+                <strong>{item.subject}</strong><span>{item.answered_count}/{item.total_count} 已答 · {item.correct_count} 正确</span><small>{new Date(item.created_at).toLocaleString()}</small><b>{item.completed_at ? "查看记录" : "继续练习"} →</b>
+              </button>)}</div>
+            </section>}
             <div className="practice-fields">
               <label>
                 <span>学科</span>
@@ -485,6 +527,7 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                 </button>
               </div>
             </div>
+            <ConfidenceSummaryView summary={confidenceSummary} />
           </section>
         ) : (
           <section className="practice-stage panel">
@@ -589,18 +632,19 @@ export function PracticeView({active=true}:{active?:boolean}): JSX.Element {
                   })}
                 </div>
                 {!answerResult ? (
-                  <div className="practice-submit-row">
+                  <><ConfidencePicker value={selectedConfidence} onChange={setSelectedConfidence} /><div className="practice-submit-row">
                     <span>{isMultiple ? "请选择全部正确选项" : "请选择一个选项"}</span>
                     <button className="primary-action compact" type="button" onClick={() => void submitAnswer()} disabled={!selectedOptions.length || busy}>
                       <Check size={16} /> 提交答案
                     </button>
-                  </div>
+                  </div></>
                 ) : (
                   <div className={`practice-result ${answerResult.correct ? "is-correct" : "is-wrong"}`}>
                     <div className="practice-result-title">
                       {answerResult.correct ? <Check size={23} /> : <X size={23} />}
                       <strong>{answerResult.correct ? "回答正确" : "回答错误"}</strong>
                       <span>你的答案：{answerResult.selected_options.join("、")}　正确答案：{answerResult.correct_options.join("、")}</span>
+                      {answerResult.confidence_level && <span>提交前：{CONFIDENCE_LABELS[answerResult.confidence_level - 1]}{!answerResult.correct && answerResult.confidence_level === 4 ? " · 高把握答错" : ""}</span>}
                     </div>
                     {resultQuestion && <QuestionExplanation key={resultQuestion.id} question={resultQuestion} selected={answerResult.selected_options} active={active}/>}
                     {resultQuestion && <QuestionReflection key={resultQuestion.id} question={resultQuestion} onChanged={() => setLearningRevision(value => value + 1)} onPractice={q => void practiceRelated(q)} />}

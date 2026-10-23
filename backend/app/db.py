@@ -57,6 +57,8 @@ def init_db() -> None:
         init_reviews(connection)
         from .paper_package import init_tables as init_paper_package
         init_paper_package(connection)
+        from .sync import init_tables as init_sync_tables
+        init_sync_tables(connection)
         from .learning import init_learning
         init_learning(connection)
         connection.executescript(
@@ -196,6 +198,7 @@ def init_db() -> None:
                 selected_option TEXT NOT NULL,
                 correct_option TEXT NOT NULL,
                 is_correct INTEGER NOT NULL DEFAULT 0,
+                confidence_level INTEGER CHECK(confidence_level BETWEEN 1 AND 4),
                 created_at TEXT NOT NULL,
                 UNIQUE(session_id, question_id),
                 FOREIGN KEY(session_id) REFERENCES practice_sessions(id) ON DELETE CASCADE,
@@ -239,6 +242,7 @@ def init_db() -> None:
                 "question_bank_id": "TEXT",
                 "practice_mode": "TEXT NOT NULL DEFAULT 'standard'",
             },
+            "practice_attempts": {"confidence_level": "INTEGER CHECK(confidence_level BETWEEN 1 AND 4)"},
             "tags": {"question_bank_id": "TEXT"},
         }
         for table, columns in migrations.items():
@@ -248,6 +252,9 @@ def init_db() -> None:
             for column, definition in columns.items():
                 if column not in existing_columns:
                     connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+        from .exam import init_tables as init_exam_tables
+        init_exam_tables(connection)
 
         now = utc_now()
         connection.execute(

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "tsc --noEmit && electron-vite build",
+    "build:web": "node build-web.mjs",
     "preview": "electron-vite preview",
     "smoke:pet": "electron desktop-pet-smoke.mjs --no-sandbox",
     "typecheck": "tsc --noEmit",
@@ -34,6 +35,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.2.1",
     "electron-vite": "^2.3.0",
-    "typescript": "^5.7.2"
+    "qrcode-terminal": "^0.12.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.21"
   }
 }

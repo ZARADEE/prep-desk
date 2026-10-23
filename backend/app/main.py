@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
+import ipaddress
 import io
 import json
 import mimetypes
+import os
 import random
 import re
 import shutil
@@ -12,12 +15,13 @@ import uuid
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
+from fastapi.staticfiles import StaticFiles
 
 from .admissions_feed import fetch_recent_official_feed, fetch_scoreline_detail, fetch_scoreline_index
 from .composer import compose_paper, load_paper
@@ -66,6 +70,10 @@ from .review_scheduler import router as review_router, enroll_wrong
 app.include_router(review_router)
 from .paper_package import router as paper_package_router
 app.include_router(paper_package_router)
+from .exam import router as exam_router
+app.include_router(exam_router)
+from .sync import router as sync_router
+app.include_router(sync_router)
 
 
 @app.exception_handler(RequestValidationError)
@@ -80,6 +88,59 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def mobile_access_gate(request, call_next):
+    """Require the per-run QR grant for non-local access to the mobile server."""
+    access_token = os.getenv("PAPER_HELPER_MOBILE_TOKEN", "")
+    if not access_token:
+        return await call_next(request)
+
+    remote = True
+    client_host = request.client.host if request.client else ""
+    try:
+        remote = not ipaddress.ip_address(client_host).is_loopback
+    except ValueError:
+        pass
+
+    cookie_token = request.cookies.get("paper_helper_mobile_access", "")
+    token_bytes = access_token.encode("utf-8")
+    authorized = bool(cookie_token) and hmac.compare_digest(cookie_token.encode("utf-8"), token_bytes)
+    sync_token = os.getenv("PAPER_HELPER_SYNC_TOKEN", access_token)
+
+    if remote and request.method == "GET" and request.url.path == "/":
+        supplied = request.query_params.get("access_token", "")
+        if supplied:
+            if not hmac.compare_digest(supplied.encode("utf-8"), token_bytes):
+                return JSONResponse(status_code=403, content={"detail": "Invalid mobile access link."})
+            response = RedirectResponse("/", status_code=303)
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["Referrer-Policy"] = "no-referrer"
+            response.set_cookie(
+                "paper_helper_mobile_access",
+                access_token,
+                max_age=8 * 60 * 60,
+                httponly=True,
+                secure=request.url.scheme == "https",
+                samesite="strict",
+                path="/",
+            )
+            return response
+
+    if remote and request.url.path.startswith("/api") and not authorized:
+        return JSONResponse(status_code=401, content={"detail": "Scan the current QR code to access this local app."})
+
+    if (not remote or authorized) and sync_token:
+        headers = [
+            (name, value)
+            for name, value in request.scope["headers"]
+            if name.lower() != b"x-paper-helper-sync-token"
+        ]
+        headers.append((b"x-paper-helper-sync-token", sync_token.encode("utf-8")))
+        request.scope["headers"] = headers
+
+    return await call_next(request)
 
 
 class TagCreate(BaseModel):
@@ -160,6 +221,7 @@ class PracticeStartRequest(BaseModel):
 class PracticeAnswerRequest(BaseModel):
     question_id: str
     selected_options: list[str] = Field(default_factory=list)
+    confidence_level: int | None = Field(default=None, ge=1, le=4)
 
 
 @app.on_event("startup")
@@ -1188,6 +1250,24 @@ def practice_catalog() -> dict[str, Any]:
     return result
 
 
+@app.get("/api/practice/recent")
+def recent_practice_sessions(limit: int = Query(default=12, ge=1, le=50)) -> list[dict[str, Any]]:
+    with connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT s.id, s.subject, s.practice_mode, s.total_count, s.answered_count,
+                   s.created_at, s.completed_at,
+                   (SELECT COUNT(*) FROM practice_attempts a
+                    WHERE a.session_id=s.id AND a.is_correct=1) AS correct_count
+            FROM practice_sessions s
+            ORDER BY s.created_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
 @app.post("/api/practice/sessions")
 def start_practice(payload: PracticeStartRequest) -> dict[str, Any]:
     with connect() as connection:
@@ -1321,8 +1401,8 @@ def answer_practice_question(
             """
             INSERT INTO practice_attempts(
                 id, session_id, question_id, selected_option,
-                correct_option, is_correct, created_at
-            ) VALUES(?, ?, ?, ?, ?, ?, ?)
+                correct_option, is_correct, confidence_level, created_at
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 f"attempt-{uuid.uuid4().hex[:12]}",
@@ -1331,6 +1411,7 @@ def answer_practice_question(
                 "".join(selected),
                 "".join(correct),
                 int(result),
+                payload.confidence_level,
                 now,
             ),
         )
@@ -1383,6 +1464,7 @@ def answer_practice_question(
         "selected_options": selected,
         "correct_options": correct,
         "correct": result,
+        "confidence_level": payload.confidence_level,
         "question": enrich(question),
         "answered_count": answered_count,
         "total_count": session["total_count"],
@@ -1522,6 +1604,8 @@ def download_practice_export(job_id: str) -> FileResponse:
     if not path.exists():
         raise HTTPException(status_code=404, detail="刷题导出文件已被移除。")
     return FileResponse(path, filename=path.name)
+
+
 
 
 @app.get("/api/templates")
@@ -1743,3 +1827,11 @@ def download_export(job_id: str) -> FileResponse:
     if not path.exists():
         raise HTTPException(status_code=404, detail="导出文件已被移除。")
     return FileResponse(path, filename=path.name)
+
+
+mobile_web_root = os.getenv("PAPER_HELPER_WEB_ROOT", "").strip()
+if mobile_web_root:
+    mobile_web_path = Path(mobile_web_root).resolve()
+    if not mobile_web_path.is_dir():
+        raise RuntimeError("PAPER_HELPER_WEB_ROOT does not point to a built mobile web app.")
+    app.mount("/", StaticFiles(directory=str(mobile_web_path), html=True), name="mobile-web")

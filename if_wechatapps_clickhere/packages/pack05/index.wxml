@@ -1,0 +1,51 @@
+<view class="page">
+  <view wx:if="{{error}}" class="empty">{{error}}<button class="button" bindtap="backHome">返回首页</button></view>
+  <view wx:if="{{question && !done}}">
+    <view class="practice-header"><text class="practice-title">{{title}}</text><text class="progress">{{index + 1}} / {{total}}</text></view>
+    <view class="progress-track"><view class="progress-fill" style="width:{{progressWidth}}"></view></view>
+    <view class="sheet-toggle" hover-class="tap-pressed" hover-stay-time="90" bindtap="toggleSheet">答题卡 · 已完成 {{answeredCount}} / {{total}} <text>{{sheetOpen ? '收起⌃' : '展开⌄'}}</text></view>
+    <view wx:if="{{sheetOpen}}" class="sheet-grid">
+      <view wx:for="{{sheet}}" wx:key="index" class="sheet-item {{item.answered ? 'answered' : ''}} {{item.wrong ? 'wrong' : ''}} {{item.pending ? 'pending' : ''}} {{item.current ? 'current' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-index="{{item.index}}" bindtap="openQuestion">{{item.number}}</view>
+    </view>
+    <view wx:if="{{sheetOpen}}" class="muted sheet-legend">绿色：正确 · 红色：错题 · 黄色：待自评 · 边框：当前题</view>
+    <view class="question-meta">{{question.chapter}} {{question.multiple ? '· 多选' : question.type === 'choice' ? '· 单选' : '· 主观题'}}</view>
+    <view class="stem" user-select="true">{{question.stem}}</view>
+
+    <view wx:if="{{question.type === 'choice'}}">
+      <view wx:for="{{question.options}}" wx:key="key" class="option {{item.selected ? 'selected' : ''}}" hover-class="tap-pressed" hover-stay-time="90" data-key="{{item.key}}" bindtap="choose">
+        <text class="option-key">{{item.key}}</text><text class="option-text" user-select="true">{{item.text}}</text>
+      </view>
+      <button wx:if="{{!result}}" class="button button-yellow" bindtap="submit">提交答案</button>
+    </view>
+    <view wx:else>
+      <textarea wx:if="{{!result}}" class="draft-input" placeholder="输入作答内容" value="{{draft}}" bindinput="inputDraft" bindblur="editDraft" auto-height="true" maxlength="-1" />
+      <view wx:if="{{result && draft}}" class="draft-preview"><view class="muted">我的作答</view><text user-select="true">{{draft}}</text></view>
+      <button wx:if="{{!result}}" class="button button-yellow" bindtap="reveal">查看参考答案</button>
+    </view>
+
+    <view wx:if="{{result}}" class="answer-box">
+      <view class="answer-status">{{result.subjective ? '参考答案' : result.correct ? '回答正确' : '回答错误'}}</view>
+      <view wx:if="{{!result.subjective}}" class="muted">正确选项 {{result.expected}}</view>
+      <view class="answer-text" user-select="true">{{result.answer}}</view>
+      <view wx:if="{{result.analysis}}" class="analysis" user-select="true">{{result.analysis}}</view>
+      <view wx:if="{{result.subjective && !result.graded}}" class="grade-row">
+        <button class="button button-light" data-correct="false" bindtap="grade">需复习</button>
+        <button class="button button-yellow" data-correct="true" bindtap="grade">已掌握</button>
+      </view>
+      <view wx:if="{{result.subjective && result.graded}}" class="muted">{{result.correct ? '已掌握' : '已加入错题'}}</view>
+    </view>
+
+    <view class="navigation-row">
+      <button class="button button-light" disabled="{{index === 0}}" bindtap="previous">上一题</button>
+      <button class="button" bindtap="next">{{index + 1 === total ? '完成练习' : '下一题'}}</button>
+    </view>
+  </view>
+
+  <view wx:if="{{done}}" class="summary">
+    <view class="heading">练习结果</view>
+    <view class="summary-count">{{answeredCount}} <text>/ {{total}} 题已作答</text></view>
+    <view class="summary-row"><text>正确 {{correctCount}}</text><text>错误 {{wrongCount}}</text><text>未作答 {{total - answeredCount}}</text></view>
+    <button wx:if="{{retryCount}}" class="button button-yellow" bindtap="retry">重练错题与未完成题（{{retryCount}}）</button>
+    <button class="button" bindtap="backHome">返回</button>
+  </view>
+</view>

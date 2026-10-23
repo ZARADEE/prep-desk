@@ -9,6 +9,13 @@ let initialized = false;
 const listeners = new Set<() => void>();
 let audio: HTMLAudioElement | null = null;
 let localSoundError: string | undefined;
+let browserQueue: Promise<void> = Promise.resolve();
+function newRequestId(): string {
+    if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+}
 function emit(s: TimerSnapshot): void { snapshot = { ...s, soundError: window.paperHelper ? s.soundError : localSoundError }; listeners.forEach(f => f()); }
 function acceptBrowserState(s: TimerSnapshot): void {
     const previous = snapshot.session, current = s.session;
@@ -52,7 +59,7 @@ function legacy(key: string): unknown { try {
 catch {
     return null;
 } }
-function browserEngine(): TimerEngine { const raw = localStorage.getItem(KEY); const e = new TimerEngine(raw ? readState(JSON.parse(raw)) : initialState()); e.migrate(legacy('paper-helper.home.pomodoro.v2'), legacy('paper-helper.home.pomodoro-durations.v1'), Date.now(), () => crypto.randomUUID()); return e; }
+function browserEngine(): TimerEngine { const raw = localStorage.getItem(KEY); const e = new TimerEngine(raw ? readState(JSON.parse(raw)) : initialState()); e.migrate(legacy('paper-helper.home.pomodoro.v2'), legacy('paper-helper.home.pomodoro-durations.v1'), Date.now(), newRequestId); return e; }
 async function browserWork(c?: TimerCommand): Promise<TimerReply> {
     const work = async () => {
         try {
@@ -61,7 +68,7 @@ async function browserWork(c?: TimerCommand): Promise<TimerReply> {
             let error: string | undefined;
             if (c)
                 try {
-                    e.command(c, Date.now(), () => crypto.randomUUID());
+                    e.command(c, Date.now(), newRequestId);
                 }
                 catch (x) {
                     error = String(x instanceof Error ? x.message : x);
@@ -80,12 +87,12 @@ async function browserWork(c?: TimerCommand): Promise<TimerReply> {
             return { snapshot, error };
         }
     };
-    if (!navigator.locks) {
-        const error = '此浏览器无法安全协调多标签计时，请使用桌面端或支持 Web Locks 的浏览器。';
-        emit({ ...snapshot, saveError: error });
-        return { snapshot, error };
-    }
-    return navigator.locks.request(KEY, work);
+    if (navigator.locks) return navigator.locks.request(KEY, work);
+    // Web Locks is unavailable on plain HTTP LAN origins. Serialize all timer
+    // work in this tab so phones can still use the local browser timer.
+    const queued = browserQueue.then(work, work);
+    browserQueue = queued.then(() => undefined, () => undefined);
+    return queued;
 }
 function initialize(): void {
     if (initialized)
@@ -119,7 +126,7 @@ export async function timerCommand(input: Omit<TimerCommand, 'requestId' | 'revi
     initialize();
     if (expectedSessionId && snapshot.session?.id !== expectedSessionId)
         throw new Error('这轮计时已变化，请按当前状态操作。');
-    const c: TimerCommand = { ...input, requestId: crypto.randomUUID(), revision: snapshot.revision, sessionId: expectedSessionId ?? snapshot.session?.id };
+    const c: TimerCommand = { ...input, requestId: newRequestId(), revision: snapshot.revision, sessionId: expectedSessionId ?? snapshot.session?.id };
     const r = window.paperHelper ? await window.paperHelper.timerCommand(c) : await browserWork(c);
     emit(r.snapshot);
     if (r.error)
